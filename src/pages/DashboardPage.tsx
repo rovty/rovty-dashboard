@@ -14,6 +14,45 @@ const DashboardPage = () => {
   const { user, signOut } = useAuth();
   const [access, setAccess] = useState<Record<string, AccessStatus>>({});
   const [loadingAccess, setLoadingAccess] = useState(true);
+  const [opening, setOpening] = useState<string | null>(null);
+  const [openError, setOpenError] = useState<string | null>(null);
+
+  // Cross-Worker SSO hand-off: rovty-wed runs in its own Worker with its own
+  // Supabase project, so it can't see this session at all on its own. The
+  // dashboard's own Worker (worker/index.ts, not this client code) re-checks
+  // product_access server-side and mints a short-lived signed token only if
+  // it's active — this call can't be used to reach a product you're not
+  // entitled to, the check happens on the server that issues the token, not
+  // here.
+  const openProduct = async (slug: string) => {
+    setOpenError(null);
+    setOpening(slug);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setOpenError('Your session expired — refresh and sign in again.');
+      setOpening(null);
+      return;
+    }
+    try {
+      const res = await fetch('/api/sso/mint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ product: slug }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setOpenError(body.error ?? 'Could not open that product.');
+        setOpening(null);
+        return;
+      }
+      window.location.href = body.url;
+    } catch {
+      setOpenError('Network error — try again.');
+      setOpening(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +105,10 @@ const DashboardPage = () => {
 
         <h2 className="text-xs font-semibold uppercase tracking-[0.04em] text-line-700 mb-4">Products</h2>
 
+        {openError && (
+          <p className="mb-4 text-sm text-red-700 bg-red-50 border-2 border-red-200 px-3.5 py-2.5">{openError}</p>
+        )}
+
         {loadingAccess ? (
           <p className="flex items-center gap-2 text-sm text-line-700">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading your access…
@@ -88,7 +131,15 @@ const DashboardPage = () => {
                     )}
                   </div>
                   {isActive ? (
-                    <span className="text-xs font-semibold uppercase tracking-[0.04em] text-green-700">Active</span>
+                    <button
+                      type="button"
+                      onClick={() => void openProduct(product.slug)}
+                      disabled={opening === product.slug}
+                      className="self-start flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.04em] bg-ink text-paper hover:bg-line-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {opening === product.slug && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Open {product.name}
+                    </button>
                   ) : (
                     <a
                       href={product.pricingUrl}

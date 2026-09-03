@@ -1,0 +1,7 @@
+SSO_SHARED_SECRET=replace-with-a-long-random-secret
+SUPABASE_SERVICE_ROLE_KEY=replace-with-this-projects-service-role-or-secret-key
+
+# Override for local testing only — points the SSO hand-off at a local
+# rovty-wed dev server instead of production. Omit in production; the
+# wrangler.jsonc `vars.WED_ORIGIN` (https://wed.rovty.com) applies there.
+# WED_ORIGIN=http://localhost:8080

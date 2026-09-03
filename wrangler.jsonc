@@ -2,14 +2,26 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rovty-dashboard",
   "compatibility_date": "2026-06-07",
+  "main": "worker/index.ts",
   "observability": {
     "enabled": true
   },
   "assets": {
     "directory": "dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  // Non-secret — same values as .env's VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY,
+  // just also readable by the Worker script (which doesn't see Vite's
+  // import.meta.env). SSO_SHARED_SECRET is NOT here on purpose: set it with
+  // `wrangler secret put SSO_SHARED_SECRET` for production, and in
+  // `.dev.vars` (gitignored) for local `wrangler dev`.
+  "vars": {
+    "SUPABASE_URL": "https://ndhdczyqjrbxnglduukc.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_OUIE4pDkqq_B5jTEA-2kJg_odRS28iA",
+    "WED_ORIGIN": "https://wed.rovty.com"
+  }
 }
