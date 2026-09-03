@@ -145,7 +145,15 @@ const LoginPage = () => {
       return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // emailRedirectTo pins the confirmation link to wherever this is actually
+    // running (dash.rovty.com in production, localhost in dev) rather than
+    // leaving it to Supabase's single project-wide Site URL default — same
+    // reasoning as handleResetRequest below.
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
     setSubmitting(false);
     if (error) {
       setError(error.message);
