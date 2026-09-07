@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -90,6 +90,30 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [confirmEmailSent, setConfirmEmailSent] = useState(false);
+
+  // handleOAuth below sets oauthLoading and then navigates away to the
+  // provider — it never runs its own "reset to null" line on that path,
+  // because there's normally no JS left running to run it once the browser
+  // is on Google's page. That's fine on a real reload, but if the person
+  // taps back before finishing sign-in, mobile browsers commonly restore
+  // this page from the back-forward cache (bfcache) instead of reloading
+  // it — same frozen React state comes back, oauthLoading still set, button
+  // stuck disabled/spinning with no way to retry. `pageshow` with
+  // `persisted: true` is the standard signal a page came from bfcache
+  // rather than a fresh load; desktop Chrome is far less likely to bfcache
+  // a page that just fired a full-page redirect, which is why this was
+  // mobile-only. Runs unconditionally, before the early-return below, so it
+  // never breaks the rules-of-hooks ordering.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setOauthLoading(null);
+        setSubmitting(false);
+      }
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   // Already signed in (or a session just resolved) — don't show the login
   // form, send them straight through to wherever they were headed.
