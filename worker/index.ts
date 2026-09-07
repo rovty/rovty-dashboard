@@ -6,6 +6,13 @@ export interface Env {
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SSO_SHARED_SECRET: string;
+  // Separate from SSO_SHARED_SECRET on purpose — that one signs short-lived
+  // per-user hand-off tokens; this one is a static credential a product's
+  // own Worker presents to prove it's allowed to grant product_access on
+  // someone else's behalf (see handleGrantProductAccess). Different
+  // purpose, different blast radius if it ever leaks, so it rotates
+  // independently.
+  TEAM_GRANT_SHARED_SECRET: string;
   // product -> the Worker origin that should receive the hand-off token.
   // Add an entry here (and a matching origin allowlist entry, see below) for
   // each product this pattern gets extended to.
@@ -20,6 +27,20 @@ export interface Env {
 function productOrigin(env: Env, product: string): string | null {
   if (product === "wed") return env.WED_ORIGIN;
   return null;
+}
+
+// Constant-time compare for the shared-secret check below — a naive `===`
+// short-circuits on the first mismatched byte, which leaks how many leading
+// characters a guess got right via response timing. The secret is long and
+// random enough that this is a defense-in-depth measure, not the only thing
+// standing between an attacker and the endpoint, but it's cheap to do right.
+function timingSafeEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  if (aBytes.length !== bBytes.length) return false;
+  let diff = 0;
+  for (let i = 0; i < aBytes.length; i++) diff |= aBytes[i] ^ bBytes[i];
+  return diff === 0;
 }
 
 async function requireCallerSession(
@@ -138,6 +159,86 @@ async function handleResolve(request: Request, env: Env): Promise<Response> {
   return Response.json({ email: user.email, product: payload.product });
 }
 
+// Server-to-server only — called by a product's own Worker (e.g. rovty-wed's
+// /api/team) right after IT decides someone should have access, typically
+// because that product has its own team/collaborator concept (e.g.
+// wedding_members) that this dashboard knows nothing about and never will.
+// This is deliberately the mirror image of the mint/resolve pair above:
+// those two prove "this dashboard user may enter that product"; this one
+// lets a product tell the dashboard "this email should be entitled to me."
+// Trust is a static shared secret rather than a per-call signed token
+// because there's no browser/session in the loop to scope a token to — the
+// caller IS the trusted party, not someone acting on a user's behalf.
+async function handleGrantProductAccess(request: Request, env: Env): Promise<Response> {
+  const auth = request.headers.get("Authorization");
+  const presented = auth?.startsWith("Bearer ") ? auth.slice("Bearer ".length) : null;
+  if (!presented || !timingSafeEqual(presented, env.TEAM_GRANT_SHARED_SECRET)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: { email?: unknown; product?: unknown };
+  try {
+    body = (await request.json()) as { email?: unknown; product?: unknown };
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
+  const product = typeof body.product === "string" ? body.product : null;
+  if (!email || !product) return Response.json({ error: "Missing email or product" }, { status: 400 });
+
+  // Reuses productOrigin as an allowlist even though we don't need the
+  // origin here — it's the one place "which products exist" is already
+  // enumerated, and rejecting an unknown product keeps a typo or a
+  // compromised caller from writing arbitrary product_access rows.
+  if (!productOrigin(env, product)) return Response.json({ error: "Unknown product" }, { status: 400 });
+
+  // Find-or-create the dashboard-project auth user for this email. Same
+  // technique rovty-wed's own /sso route uses for its project (see that
+  // file's comment): generateLink creates the user if this email has never
+  // been seen in *this* Supabase project before, and returns the existing
+  // user unchanged if it has — either way we get back an id, and unlike
+  // inviteUserByEmail this never sends an email of its own, so a teammate
+  // who's about to get a "you've been added" email from the product itself
+  // doesn't also get an unrelated dashboard invite they didn't ask for.
+  // Trade-off: the account this creates has an unconfirmed email until they
+  // actually sign in (OAuth, or password reset) — acceptable here since the
+  // alternative (inviteUserByEmail) both duplicates the product's own email
+  // and fails outright for anyone who already has a dashboard account.
+  const linkRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/generate_link`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type: "magiclink", email }),
+  });
+  if (!linkRes.ok) return Response.json({ error: "Could not resolve dashboard account" }, { status: 502 });
+  const linked = (await linkRes.json()) as { id?: string; user?: { id?: string } };
+  const userId = linked.id ?? linked.user?.id;
+  if (!userId) return Response.json({ error: "Could not resolve dashboard account" }, { status: 502 });
+
+  // Upsert rather than insert: re-inviting someone (or a retried call) just
+  // re-affirms `active` instead of erroring on the (user_id, product)
+  // unique constraint.
+  const upsertRes = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/product_access?on_conflict=user_id,product`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({ user_id: userId, product, status: "active", granted_at: new Date().toISOString() }),
+    },
+  );
+  if (!upsertRes.ok) return Response.json({ error: "Could not grant access" }, { status: 502 });
+
+  return Response.json({ ok: true, email, product });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -146,6 +247,9 @@ export default {
     }
     if (request.method === "POST" && url.pathname === "/api/sso/resolve") {
       return handleResolve(request, env);
+    }
+    if (request.method === "POST" && url.pathname === "/api/product-access/grant") {
+      return handleGrantProductAccess(request, env);
     }
     return env.ASSETS.fetch(request);
   },

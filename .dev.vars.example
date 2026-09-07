@@ -1,4 +1,10 @@
 SSO_SHARED_SECRET=replace-with-a-long-random-secret
+# Presented by a product's own Worker (e.g. rovty-wed's /api/team) when it
+# calls /api/product-access/grant to entitle one of its own team members —
+# must match that product's TEAM_GRANT_SHARED_SECRET exactly. Generate with
+# `openssl rand -hex 32`; set via `wrangler secret put TEAM_GRANT_SHARED_SECRET`
+# in production.
+TEAM_GRANT_SHARED_SECRET=replace-with-a-long-random-secret
 SUPABASE_SERVICE_ROLE_KEY=replace-with-this-projects-service-role-or-secret-key
 
 # Override for local testing only — points the SSO hand-off at a local
