@@ -46,7 +46,7 @@ const DashboardPage = () => {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) {
-      setOpenError('Your session expired — refresh and sign in again.');
+      setOpenError('Your session expired. Refresh and sign in again.');
       setOpening(null);
       return;
     }
@@ -64,7 +64,7 @@ const DashboardPage = () => {
       }
       window.location.href = body.url;
     } catch {
-      setOpenError('Network error — please try again.');
+      setOpenError('Network error. Please try again.');
       setOpening(null);
     }
   };
@@ -128,7 +128,7 @@ const DashboardPage = () => {
             <a href="mailto:hello@rovty.com" className="text-ink font-semibold underline underline-offset-[3px]">
               hello@rovty.com
             </a>{' '}
-            — we reply within one business day.
+            and we reply within one business day.
           </p>
         </div>
       </section>
