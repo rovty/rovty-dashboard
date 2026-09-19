@@ -32,7 +32,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-50 bg-ink text-paper border-b-2 border-line-700">
+      <header className="glass-ink sticky top-0 z-50 text-paper border-b-2">
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8 flex items-center justify-between gap-6 h-[64px]">
           <a href="https://rovty.com" className="flex items-center gap-3 shrink-0" aria-label="Rovty home">
             <img src="/rovty-logo.png" alt="Rovty" width={110} height={24} className="h-6 w-auto brightness-0 invert" />
@@ -71,7 +71,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           aria-modal="true"
           aria-label="Account"
           hidden={!open}
-          className="md:hidden border-t-2 border-line-700 bg-ink"
+          className="glass-ink md:hidden border-t-2"
         >
           <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-5 flex flex-col gap-4">
             <div>
