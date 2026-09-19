@@ -12,9 +12,30 @@ originates.
 
 ```bash
 npm install
-cp .env.example .env   # then fill in your Supabase project's URL + anon key
-npm run dev
+cp .env.example .env            # Supabase URL + anon key for the browser app
+cp .dev.vars.example .dev.vars  # Worker secrets for local wrangler dev
+npm run dev                     # SPA on :5173, proxies /api/* → :8787
+npm run dev:worker              # Worker on :8787 (in a second terminal)
 ```
+
+`npm run build` runs `tsc -b` (app + worker + shared) before Vite, so type
+errors fail the build. `npm run preview` builds and serves the whole thing
+through `wrangler dev`.
+
+## Worker API (`worker/index.ts`)
+
+All endpoints are `POST`, return `Cache-Control: no-store`, and are rate
+limited per client IP when the `SSO_RATE_LIMITER` binding is present.
+
+| Endpoint | Caller | Auth |
+|---|---|---|
+| `/api/sso/mint` | browser (this app) | Supabase session bearer; same-origin only |
+| `/api/sso/resolve` | a product Worker (e.g. rovty-wed `/sso`) | `Bearer TEAM_GRANT_SHARED_SECRET` |
+| `/api/product-access/grant` | a product Worker (e.g. rovty-wed `/api/team`) | `Bearer TEAM_GRANT_SHARED_SECRET` |
+
+Tokens are HMAC-signed, 3-minute, single-use (nonce claimed in `sso_nonces`,
+pruned after 24 h). Products are declared once in `shared/products.ts` and
+used by both the browser and the Worker.
 
 ## Auth
 

@@ -1,11 +1,13 @@
 {
   "name": "rovty-dashboard",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "dev:worker": "wrangler dev --port 8787",
+    "typecheck": "tsc -b",
+    "build": "npm run typecheck && vite build",
     "lint": "eslint .",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy"
@@ -20,9 +22,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260831.1",
     "@eslint/js": "^9.9.1",
+    "@types/node": "^26.6.2",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.18",
     "eslint": "^9.9.1",

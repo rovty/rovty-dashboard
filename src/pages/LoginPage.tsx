@@ -76,10 +76,22 @@ const OAuthButtons = ({
   </div>
 );
 
+// Friendly copy for ?error= codes a product Worker may bounce us back with
+// (see rovty-wed/src/routes/sso.ts's failure()).
+const SSO_ERRORS: Record<string, string> = {
+  missing_token: 'That sign-in link was incomplete. Open the product from your dashboard again.',
+  resolve_failed: 'That sign-in link has expired or was already used. Open the product from your dashboard again.',
+  resolve_unreachable: 'We could not reach the sign-in service. Please try again in a moment.',
+  session_creation_failed: 'We could not start your session. Please try again.',
+  server_misconfigured: 'Sign-in is temporarily unavailable. Please try again later.',
+};
+
 const LoginPage = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const from = (location.state as { from?: Location })?.from?.pathname ?? '/';
+  const ssoErrorCode = new URLSearchParams(location.search).get('error');
+  const ssoError = ssoErrorCode ? (SSO_ERRORS[ssoErrorCode] ?? 'Something went wrong signing you in.') : null;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -227,7 +239,14 @@ const LoginPage = () => {
           <p className="text-sm text-line-400 mb-7">{subheading}</p>
 
           {error && (
-            <p className="mb-5 text-sm text-red-400 bg-red-950/50 border-2 border-red-900 px-3.5 py-2.5">{error}</p>
+            <p role="alert" className="mb-5 text-sm text-red-300 bg-red-950/50 border-2 border-red-900 px-3.5 py-2.5">
+              {error}
+            </p>
+          )}
+          {ssoError && !error && (
+            <p role="alert" className="mb-5 text-sm text-red-300 bg-red-950/50 border-2 border-red-900 px-3.5 py-2.5">
+              {ssoError}
+            </p>
           )}
 
           {mode === 'sign-in' && (

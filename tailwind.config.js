@@ -10,6 +10,7 @@ export default {
         ink: '#000000',
         paper: '#f3f2f2',
         line: {
+          200: '#e6e3e3',
           300: '#d7d3d3',
           400: '#bab6b6',
           500: '#9b9797',
