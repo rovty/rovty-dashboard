@@ -4,26 +4,38 @@
 // product's origin (kept as a var name, not a URL, so this file has no
 // environment-specific values and can be imported client-side).
 //
-// Add a product here and:
+// Planned products belong in the catalog too, but cannot be launched.
+// To make a product available:
 //   1. add `<ORIGIN_VAR>` to wrangler.jsonc `vars` (and `Env` in worker/index.ts),
 //   2. make sure that product's Worker implements `/sso` (see rovty-wed/src/routes/sso.ts).
 
-export interface Product {
+interface ProductDetails {
   slug: string;
   name: string;
   tagline: string;
   description: string;
-  /** Marketing/pricing page a locked user is sent to. */
-  pricingUrl: string;
   /** Public product page for "learn more". */
   productUrl: string;
-  /** Name of the Worker env var that holds this product's origin. */
+}
+
+export interface AvailableProduct extends ProductDetails {
+  availability: 'available';
+  /** Marketing/pricing page a user without access is sent to. */
+  pricingUrl: string;
+  /** Only launchable products have an SSO origin. */
   originVar: "WED_ORIGIN";
 }
+
+export interface PlannedProduct extends ProductDetails {
+  availability: 'planned';
+}
+
+export type Product = AvailableProduct | PlannedProduct;
 
 export const PRODUCTS: readonly Product[] = [
   {
     slug: "wed",
+    availability: 'available',
     name: "Rovty Wed",
     tagline: "Wedding invitation & guest platform.",
     description:
@@ -32,8 +44,18 @@ export const PRODUCTS: readonly Product[] = [
     productUrl: "https://rovty.com/products/wed",
     originVar: "WED_ORIGIN",
   },
+  {
+    slug: 'assist',
+    availability: 'planned',
+    name: 'Rovty Assist',
+    tagline: 'Customer conversations, connected.',
+    description: 'An upcoming assistant for customer conversations, lead capture, and getting the right people involved at the right moment.',
+    productUrl: 'https://rovty.com/products/assist',
+  },
 ] as const;
 
-export function findProduct(slug: string): Product | undefined {
-  return PRODUCTS.find((p) => p.slug === slug);
+// Used by the Worker for mint, resolve, and grant. A catalog entry alone
+// must never make an unfinished product a valid SSO destination.
+export function findProduct(slug: string): AvailableProduct | undefined {
+  return PRODUCTS.find((p): p is AvailableProduct => p.slug === slug && p.availability === 'available');
 }

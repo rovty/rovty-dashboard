@@ -8,6 +8,48 @@ Same stack, same "Modernist" design tokens (`ink`/`paper`/`line-*`, Archivo)
 as `rovty.com` — see that repo's `tailwind.config.js` for where the palette
 originates.
 
+## Workspace UI
+
+The dashboard uses the marketing site's ink-and-paper palette and Archivo
+typography, with desktop workspace navigation and a compact mobile nav.
+Overview, Products, and Account navigate to sections on the same page. The
+Rovty logo leads to `rovty.com`; account actions live in the account menu.
+
+- `src/components/AppShell.tsx`: navigation, account disclosure, sign-out.
+- `src/pages/DashboardPage.tsx`: access summary, quick launch, product filters,
+  catalog, account and support details.
+- `src/hooks/useProductAccess.ts`: cancellable, user-scoped access loading and
+  retry. Failed requests never appear as missing entitlements.
+- `src/components/ProductArtwork.tsx`: lightweight local product illustrations.
+- `src/workspace.css`: responsive workspace styles, scoped to `.workspace`.
+- `shared/products.ts`: the shared product catalog. `available` entries include
+  pricing and an SSO origin binding; `planned` entries only have a public preview.
+  `findProduct` only returns available products, so listing upcoming Rovty Assist
+  cannot enable minting, redemption, or access grants for it.
+
+Rovty Wed is available; Rovty Assist is in development. Add confirmed future
+products to the registry as planned entries. Promoting a product requires its
+SSO integration and origin binding as well as the catalog change. Access still
+comes from `product_access`, enforced by the existing Worker and Supabase RLS.
+The workspace redesign requires no database migration.
+
+## Checks
+
+`npm test` runs catalog/Worker regressions with stubbed Supabase requests.
+`npm run build` checks browser and Worker types; `npm run lint` checks source.
+
+For local browser checks, start a separate Vite process with test credentials:
+
+```bash
+VITE_SUPABASE_URL=https://rovty-dashboard-test.supabase.co VITE_SUPABASE_ANON_KEY=local-test-anon npm run dev -- --host 127.0.0.1 --port 5176
+python3 tests/dashboard_browser.py
+```
+
+The browser script requires Python Playwright and installed Chrome. It uses
+only a local test session, stubs all auth/access/SSO calls, and checks active,
+inactive, empty, loading, and failed access; filtering; navigation; mobile
+layout; sign-out; and the product hand-off. Screenshots go to `/tmp`.
+
 ## Setup
 
 ```bash
@@ -85,7 +127,7 @@ uses between "have an account" and "have a paid plan for a given service":
   (`supabase/migrations/0001_product_access.sql` — run it once in the
   Supabase SQL Editor) keyed by user + product slug (e.g. `wed`, matching
   `src/lib/products.ts`). `DashboardPage` reads this per product and shows
-  Active/Locked accordingly. Row Level Security lets a user read their own
+  access or a link to get the product. Row Level Security lets a user read their own
   rows but never write them — nobody can grant themselves access from the
   client.
 - **Granting access is manual for now** — no payment gateway is wired up
