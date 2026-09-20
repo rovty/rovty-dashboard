@@ -1,12 +1,16 @@
 # Rovty Dashboard
 
-The authenticated app at `dash.rovty.com`. Marketing site (`rovty.com`)'s
-"Login" button links to `/login` here; a signed-in session is required for
+The authenticated app at `dash.rovty.com`. The marketing site's **Apps**
+button opens the launcher; a signed-in session is required for
 everything else — see `src/components/ProtectedRoute.tsx`.
 
 Same stack, same "Modernist" design tokens (`ink`/`paper`/`line-*`, Archivo)
 as `rovty.com` — see that repo's `tailwind.config.js` for where the palette
 originates.
+
+See [platform navigation](docs/platform-navigation.md) for the separate Worker
+origins, direct app sign-in, Back/Forward behavior, required Supabase callback
+URLs, and the integration test across all three apps.
 
 ## Workspace UI
 

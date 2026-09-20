@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { signInDestination } from '../lib/navigation';
 
 // Client-side gate for the SPA. Real data protection is Supabase RLS; this
 // only decides what to render while the session resolves.
@@ -21,7 +22,10 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) {
+    const next = signInDestination(location.pathname + location.search + location.hash);
+    return <Navigate to={next === '/' ? '/login' : `/login?next=${encodeURIComponent(next)}`} replace />;
+  }
   return <>{children}</>;
 };
 

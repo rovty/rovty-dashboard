@@ -15,6 +15,14 @@ export function useProductAccess(userId: string | undefined) {
   }, []);
 
   useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setAttempt((value) => value + 1);
+    };
+    window.addEventListener('pageshow', restored);
+    return () => window.removeEventListener('pageshow', restored);
+  }, []);
+
+  useEffect(() => {
     if (!userId) return;
     const controller = new AbortController();
 

@@ -18,10 +18,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    let mounted = true;
+    const restoreSession = () => void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) { setSession(session); setLoading(false); }
+    }).catch(() => { if (mounted) { setSession(null); setLoading(false); } });
+    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) restoreSession(); };
+    restoreSession();
+    window.addEventListener('pageshow', onPageShow);
 
     // Keeps state in sync for everything else too: token refresh, sign-out in
     // another tab, and the OAuth redirect flow landing back on the app.
@@ -32,7 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, []);
 
   const signOut = async () => {

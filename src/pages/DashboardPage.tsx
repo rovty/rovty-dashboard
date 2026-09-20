@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { ArrowUpRight, Check, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import { AVAILABLE_PRODUCTS, findProduct, type AvailableProduct } from '../lib/products';
+import { AVAILABLE_PRODUCTS, type AvailableProduct } from '../lib/products';
 import { useProductAccess } from '../hooks/useProductAccess';
+import { useProductLaunch } from '../hooks/useProductLaunch';
 import AppShell from '../components/AppShell';
 import ProductArtwork from '../components/ProductArtwork';
 import { Alert, Button, ButtonLink } from '../components/ui';
@@ -11,9 +11,7 @@ import { Alert, Button, ButtonLink } from '../components/ui';
 export default function DashboardPage() {
   const { user } = useAuth();
   const { state, retry } = useProductAccess(user?.id);
-  const [opening, setOpening] = useState<string | null>(null);
-  const openingRef = useRef(false);
-  const [openError, setOpenError] = useState<string | null>(null);
+  const { opening, error: openError, open } = useProductLaunch();
   const activeProducts = state.kind === 'ready'
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] === 'active')
     : [];
@@ -21,40 +19,9 @@ export default function DashboardPage() {
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] !== 'active')
     : [];
 
-  useEffect(() => {
-    document.title = 'Your workspace | Rovty';
-    const resetOpening = () => {
-      openingRef.current = false;
-      setOpening(null);
-    };
-    // Returning from a product via browser Back can restore a bfcache page.
-    window.addEventListener('pageshow', resetOpening);
-    return () => window.removeEventListener('pageshow', resetOpening);
-  }, []);
-
-  // Keep the existing server-verified SSO hand-off. Catalog visibility is
-  // independent from entitlement; planned products can never be launched.
-  const openProduct = async (slug: string) => {
-    if (openingRef.current || !findProduct(slug) || state.kind !== 'ready' || state.access[slug] !== 'active') return;
-    openingRef.current = true;
-    setOpenError(null);
-    setOpening(slug);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Your session expired. Refresh and sign in again.');
-      const res = await fetch('/api/sso/mint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ product: slug }),
-      });
-      const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !body.url) throw new Error(body.error ?? 'Could not open that product. Please try again.');
-      window.location.assign(body.url);
-    } catch (error) {
-      setOpenError(error instanceof Error && error.message !== 'Failed to fetch' ? error.message : 'Couldn’t connect. Check your connection and try again.');
-      setOpening(null);
-      openingRef.current = false;
-    }
+  useEffect(() => { document.title = 'Your workspace | Rovty'; }, []);
+  const openProduct = (slug: string) => {
+    if (state.kind === 'ready' && state.access[slug] === 'active') void open(slug);
   };
 
   return (

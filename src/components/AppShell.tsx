@@ -2,8 +2,9 @@ import { useState, type ReactNode } from 'react';
 import { ArrowUpRight, Grid2X2, LifeBuoy, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { accountName } from '../lib/account';
+import { SITE_ORIGIN } from '../lib/navigation';
 
-const SUPPORT_URL = 'https://rovty.com/contact';
+const SUPPORT_URL = `${SITE_ORIGIN}/contact`;
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -37,15 +38,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="workspace">
       <a href="#main" className="workspace-skip">Skip to content</a>
       <aside className="workspace-sidebar workspace-glass">
-        <a href="https://rovty.com" className="workspace-logo" aria-label="Rovty home"><img src="/rovty-logo.png" alt="Rovty" width={110} height={24} /></a>
+        <a href={SITE_ORIGIN} className="workspace-logo" aria-label="Rovty home"><img src="/rovty-logo.png" alt="Rovty" width={110} height={24} /></a>
         <p className="eyebrow workspace-label">Workspace</p>
         {nav()}
-        <div className="sidebar-bottom"><a href="https://rovty.com">Explore Rovty<ArrowUpRight size={15} aria-hidden="true" /></a></div>
+        <div className="sidebar-bottom"><a href={SITE_ORIGIN}>Explore Rovty<ArrowUpRight size={15} aria-hidden="true" /></a></div>
       </aside>
 
       <div className="workspace-body">
         <header className="workspace-header workspace-glass">
-          <a href="https://rovty.com" className="mobile-logo" aria-label="Rovty home"><img src="/rovty-logo.png" alt="Rovty" width={92} height={20} /></a>
+          <a href={SITE_ORIGIN} className="mobile-logo" aria-label="Rovty home"><img src="/rovty-logo.png" alt="Rovty" width={92} height={20} /></a>
           <span className="workspace-header-label">Workspace</span>
           <div className="header-account">
             <div className="account-identity" title={user?.email ? `${name} · ${user.email}` : name}>
@@ -63,7 +64,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           {signOutError && <p role="alert" className="sign-out-error">Couldn’t sign out. Please try again using Sign out above.</p>}
           {children}
         </main>
-        <footer className="workspace-footer"><span>© {new Date().getFullYear()} Rovty</span><div><a href="https://rovty.com/privacy">Privacy</a><a href="https://rovty.com/terms">Terms</a></div></footer>
+        <footer className="workspace-footer"><span>© {new Date().getFullYear()} Rovty</span><div><a href={`${SITE_ORIGIN}/privacy`}>Privacy</a><a href={`${SITE_ORIGIN}/terms`}>Terms</a></div></footer>
       </div>
     </div>
   );

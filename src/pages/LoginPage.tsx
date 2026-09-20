@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { signInDestination, SITE_ORIGIN } from '../lib/navigation';
 
 type Provider = 'google' | 'azure';
 type Mode = 'sign-in' | 'sign-up' | 'reset';
@@ -89,7 +90,8 @@ const SSO_ERRORS: Record<string, string> = {
 const LoginPage = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
-  const from = (location.state as { from?: Location })?.from?.pathname ?? '/';
+  const previous = (location.state as { from?: Location })?.from;
+  const from = signInDestination(new URLSearchParams(location.search).get('next') ?? (previous ? previous.pathname + previous.search + previous.hash : '/'));
   const ssoErrorCode = new URLSearchParams(location.search).get('error');
   const ssoError = ssoErrorCode ? (SSO_ERRORS[ssoErrorCode] ?? 'Something went wrong signing you in.') : null;
 
@@ -129,6 +131,7 @@ const LoginPage = () => {
 
   // Already signed in (or a session just resolved) — don't show the login
   // form, send them straight through to wherever they were headed.
+  if (authLoading) return <main className="min-h-dvh bg-ink text-paper grid place-items-center" role="status"><Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /><span className="sr-only">Checking your Rovty session</span></main>;
   if (!authLoading && user) {
     return <Navigate to={from} replace />;
   }
@@ -151,7 +154,7 @@ const LoginPage = () => {
     // provider's first-ever login automatically, no separate flow needed.
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/login?next=${encodeURIComponent(from)}` },
     });
     // On success the browser navigates away to the provider immediately, so
     // there's nothing more to do here — only failure to even start the OAuth
@@ -188,7 +191,7 @@ const LoginPage = () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/login?next=${encodeURIComponent(from)}` },
     });
     setSubmitting(false);
     if (error) {
@@ -230,7 +233,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-ink text-paper font-archivo flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-[420px]">
-        <a href="https://rovty.com" className="flex justify-center mb-10">
+        <a href={SITE_ORIGIN} className="flex justify-center mb-10">
           <img src="/rovty-logo.png" alt="Rovty" className="h-7 w-auto brightness-0 invert" />
         </a>
 
