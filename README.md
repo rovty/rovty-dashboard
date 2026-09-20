@@ -10,25 +10,32 @@ originates.
 
 ## Workspace UI
 
-The dashboard uses the marketing site's ink-and-paper palette and Archivo
-typography, with desktop workspace navigation and a compact mobile nav.
-Overview, Products, and Account navigate to sections on the same page. The
-Rovty logo leads to `rovty.com`; account actions live in the account menu.
+The dashboard is an app launcher using the marketing site's ink-and-paper
+palette and Archivo typography. Subtle glass is limited to the header and
+navigation, with opaque fallbacks and reduced-transparency support. Apps are
+solid and readable. The mobile navigation exposes Apps and Get help directly.
+The signed-in name (or email when no profile name exists) and Sign out are
+visible in the header. There is no account submenu or redundant account page.
+Get help opens the existing `https://rovty.com/contact` form in a new tab.
 
-- `src/components/AppShell.tsx`: navigation, account disclosure, sign-out.
-- `src/pages/DashboardPage.tsx`: access summary, quick launch, product filters,
-  catalog, account and support details.
+- `src/components/AppShell.tsx`: glass navigation, signed-in identity, support,
+  and direct sign-out.
+- `src/pages/DashboardPage.tsx`: accessible apps first, direct app launch, and
+  released apps available to add. No development listings or catalog filters.
+- `src/lib/account.ts`: profile-name resolution across sign-in providers.
+- `src/lib/products.ts`: released-app selection for all dashboard content.
 - `src/hooks/useProductAccess.ts`: cancellable, user-scoped access loading and
   retry. Failed requests never appear as missing entitlements.
 - `src/components/ProductArtwork.tsx`: lightweight local product illustrations.
 - `src/workspace.css`: responsive workspace styles, scoped to `.workspace`.
 - `shared/products.ts`: the shared product catalog. `available` entries include
   pricing and an SSO origin binding; `planned` entries only have a public preview.
-  `findProduct` only returns available products, so listing upcoming Rovty Assist
-  cannot enable minting, redemption, or access grants for it.
+  `findProduct` only returns available products. Planned entries are hidden
+  from the dashboard and cannot receive minting, redemption, or access grants.
 
-Rovty Wed is available; Rovty Assist is in development. Add confirmed future
-products to the registry as planned entries. Promoting a product requires its
+Rovty Wed is available; Rovty Assist remains in the registry as planned and
+does not appear in the dashboard. Add confirmed future products to the
+registry as planned entries. Promoting a product requires its
 SSO integration and origin binding as well as the catalog change. Access still
 comes from `product_access`, enforced by the existing Worker and Supabase RLS.
 The workspace redesign requires no database migration.
@@ -47,8 +54,9 @@ python3 tests/dashboard_browser.py
 
 The browser script requires Python Playwright and installed Chrome. It uses
 only a local test session, stubs all auth/access/SSO calls, and checks active,
-inactive, empty, loading, and failed access; filtering; navigation; mobile
-layout; sign-out; and the product hand-off. Screenshots go to `/tmp`.
+inactive, empty, loading, and failed access; hidden development apps; profile
+names; mobile layout; direct sign-out; and the product hand-off. It also opens
+the live Rovty contact form without submitting it. Screenshots go to `/tmp`.
 
 ## Setup
 
