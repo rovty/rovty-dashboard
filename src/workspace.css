@@ -10,16 +10,17 @@
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .workspace-glass { background: linear-gradient(120deg, rgba(255,255,255,.065), rgba(255,255,255,.015)), rgba(18,19,21,.78); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); }
 }
-.workspace-sidebar { position: fixed; inset: 12px auto 12px 12px; width: 200px; display: flex; flex-direction: column; padding: 0 16px; border-radius: 14px; z-index: 40; }
-.workspace-logo { display: flex; align-items: center; min-height: 76px; flex-shrink: 0; padding-left: 9px; }
+/* Full-height, square navigation follows the same ruled layout as Rovty Wed. */
+.workspace-sidebar { position: fixed; inset: 0 auto 0 0; width: 224px; display: flex; flex-direction: column; padding: 0 16px; border: 0; border-right: 2px solid var(--workspace-rule); border-radius: 0; z-index: 40; }
+.workspace-logo { display: flex; align-items: center; min-height: 76px; flex-shrink: 0; padding-left: 9px; border-bottom: 2px solid var(--workspace-rule); }
 .workspace-logo img, .mobile-logo img { filter: brightness(0) invert(1); width: 100px; height: auto; }
 .workspace-label { margin: 25px 11px 16px; }
 .workspace-nav { display: flex; flex-direction: column; gap: 8px; }
-.workspace-nav a { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 11px; color: #bab6b6; font-size: 13px; font-weight: 500; border: 1px solid transparent; border-radius: 8px; }
+.workspace-nav a { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 11px; color: #bab6b6; font-size: 13px; font-weight: 500; border: 2px solid transparent; border-radius: 0; }
 .workspace-nav a:hover { color: #fff; background: rgba(255,255,255,.06); }
-.workspace-nav a[aria-current] { background: rgba(255,255,255,.11); color: #fff; border-color: rgba(255,255,255,.17); box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
+.workspace-nav a[aria-current] { background: rgba(255,255,255,.11); color: #fff; border-color: rgba(255,255,255,.17); }
 .workspace-nav a > svg:last-of-type:not(:first-child) { margin-left: auto; }
-.sidebar-bottom { margin-top: auto; padding: 22px 10px; }
+.sidebar-bottom { margin-top: auto; padding: 22px 10px; border-top: 2px solid var(--workspace-rule); }
 .sidebar-bottom > a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 12px; color: #bab6b6; }
 .sidebar-bottom > a:hover { color: #fff; }
 .workspace-body { margin-left: 224px; min-height: 100dvh; display: flex; flex-direction: column; }
