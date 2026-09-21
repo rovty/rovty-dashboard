@@ -104,7 +104,7 @@ async def run():
         assert await page.locator('.workspace-header').evaluate("el => getComputedStyle(el).backdropFilter") != 'none'
         await page.get_by_role('navigation', name='Workspace', exact=True).get_by_role('link', name='Apps', exact=True).click()
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_in_viewport()
-        help_link = page.get_by_role('navigation', name='Workspace', exact=True).get_by_role('link', name='Get help')
+        help_link = page.get_by_role('navigation', name='Support and Rovty', exact=True).get_by_role('link', name='Get help')
         await expect(help_link).to_have_attribute('href', 'https://rovty.com/contact')
         async with page.expect_popup() as popup_info:
             await help_link.click()

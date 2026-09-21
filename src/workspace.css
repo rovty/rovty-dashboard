@@ -20,8 +20,9 @@
 .workspace-nav a:hover { color: #fff; background: rgba(255,255,255,.06); }
 .workspace-nav a[aria-current] { background: rgba(255,255,255,.11); color: #fff; border-color: rgba(255,255,255,.17); }
 .workspace-nav a > svg:last-of-type:not(:first-child) { margin-left: auto; }
-.sidebar-bottom { margin-top: auto; padding: 22px 10px; border-top: 2px solid var(--workspace-rule); }
-.sidebar-bottom > a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 12px; color: #bab6b6; }
+.sidebar-bottom { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding: 22px 10px; border-top: 2px solid var(--workspace-rule); }
+.sidebar-bottom > a { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; color: #bab6b6; }
+.sidebar-bottom > a > svg:last-of-type { margin-left: auto; }
 .sidebar-bottom > a:hover { color: #fff; }
 .workspace-body { margin-left: 224px; min-height: 100dvh; display: flex; flex-direction: column; }
 .workspace-header { min-height: 76px; padding: 10px var(--workspace-inset); display: flex; gap: 20px; justify-content: space-between; align-items: center; position: sticky; top: 0; border-top: 0; border-left: 0; border-right: 0; z-index: 30; }

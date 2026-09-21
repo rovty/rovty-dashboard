@@ -25,12 +25,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
+  const helpLink = (
+    <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+      <LifeBuoy size={18} strokeWidth={1.7} aria-hidden="true" />Get help<ArrowUpRight size={14} aria-hidden="true" /><span className="sr-only"> (contact form, opens in a new tab)</span>
+    </a>
+  );
+
   const nav = (mobile = false) => (
     <nav aria-label={mobile ? 'Mobile workspace' : 'Workspace'} className={mobile ? 'workspace-mobile-nav workspace-glass' : 'workspace-nav'}>
       <a href="#apps" aria-current="page"><Grid2X2 size={18} strokeWidth={1.7} aria-hidden="true" />Apps</a>
-      <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
-        <LifeBuoy size={18} strokeWidth={1.7} aria-hidden="true" />Get help<ArrowUpRight size={14} aria-hidden="true" /><span className="sr-only"> (contact form, opens in a new tab)</span>
-      </a>
+      {mobile && helpLink}
     </nav>
   );
 
@@ -41,7 +45,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <a href={SITE_ORIGIN} className="workspace-logo" aria-label="Rovty home"><img src="/rovty-logo.png" alt="Rovty" width={110} height={24} /></a>
         <p className="eyebrow workspace-label">Workspace</p>
         {nav()}
-        <div className="sidebar-bottom"><a href={SITE_ORIGIN}>Explore Rovty<ArrowUpRight size={15} aria-hidden="true" /></a></div>
+        <nav aria-label="Support and Rovty" className="sidebar-bottom">
+          {helpLink}
+          <a href={SITE_ORIGIN}>Explore Rovty<ArrowUpRight size={15} aria-hidden="true" /></a>
+        </nav>
       </aside>
 
       <div className="workspace-body">
