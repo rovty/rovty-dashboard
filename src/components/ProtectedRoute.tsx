@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { signInDestination } from '../lib/navigation';
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     const next = signInDestination(location.pathname + location.search + location.hash);
     return <Navigate to={next === '/' ? '/login' : `/login?next=${encodeURIComponent(next)}`} replace />;
   }
-  return <>{children}</>;
+  return <Fragment key={user.id}>{children}</Fragment>;
 };
 
 export default ProtectedRoute;

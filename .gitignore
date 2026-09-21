@@ -35,3 +35,6 @@ dist-ssr
 !.env.example
 !.env.staging.example
 wrangler.staging.jsonc
+
+# Local Python browser/database test caches
+__pycache__/

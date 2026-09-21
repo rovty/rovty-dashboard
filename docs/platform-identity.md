@@ -1,5 +1,7 @@
 # Rovty identity and deployment
 
+Product plans, payments and the additional coordinated migrations are documented in [Shared billing](billing.md).
+
 Rovty uses one central account identity and separate product databases. This
 release does not move wedding or support data. The three applications remain
 independently deployed Cloudflare Workers.

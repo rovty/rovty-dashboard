@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpRight, ChevronUp, Grid2X2, LifeBuoy, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ArrowUpRight, CreditCard, ChevronUp, Grid2X2, LifeBuoy, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { accountName } from '../lib/account';
 import { SITE_ORIGIN } from '../lib/navigation';
@@ -28,7 +28,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const nav = (mobile = false) => (
     <nav aria-label={mobile ? 'Mobile navigation' : 'Main navigation'} className={mobile ? 'workspace-mobile-nav workspace-glass' : 'workspace-nav'}>
-      <a href="#apps" aria-current="page" title="Apps"><Grid2X2 size={18} strokeWidth={1.7} aria-hidden="true" /><span className="sidebar-text">Apps</span></a>
+      <a href="/#apps" aria-current={location.pathname === "/" ? "page" : undefined} title="Apps"><Grid2X2 size={18} strokeWidth={1.7} aria-hidden="true" /><span className="sidebar-text">Apps</span></a>
       {mobile && <>{helpLink}<AccountMenu /></>}
     </nav>
   );
@@ -45,6 +45,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
         {nav()}
         <div className="sidebar-bottom">
+          <nav aria-label="Billing"><a href="/billing/history" title="Payments"><CreditCard size={18} aria-hidden="true" /><span className="sidebar-text">Payments</span></a></nav>
           <nav aria-label="Support">{helpLink}</nav>
           <AccountMenu />
         </div>

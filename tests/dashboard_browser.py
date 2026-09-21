@@ -75,7 +75,10 @@ async def fixture(browser, *, access='active', width=1440, authenticated=True, p
     page.on('pageerror', lambda error: state['errors'].append(str(error)))
     await page.goto(BASE, wait_until='domcontentloaded')
     if authenticated:
-        await expect(page.get_by_role('heading', name='Your apps')).to_be_visible()
+        try:
+            await expect(page.get_by_role('heading', name='Your apps')).to_be_visible()
+        except AssertionError:
+            raise AssertionError(str(state['errors']) + '\n' + await page.locator('body').inner_text())
     return context, page, state
 
 
@@ -224,7 +227,7 @@ async def run():
         for access in ['empty', 'inactive']:
             context, page, state = await fixture(browser, access=access)
             await page.get_by_role('searchbox', name='Search apps').fill('WED')
-            await expect(page.get_by_role('link', name='Get Rovty Wed')).to_have_attribute('href', 'https://rovty.com/pricing/wed')
+            await expect(page.get_by_role('link', name='Get Rovty Wed')).to_have_attribute('href', '/billing/wed')
             await expect(page.get_by_text('Choose an app to get started.')).to_be_visible()
             assert not await page.get_by_role('button', name='Open Rovty Wed').count()
             assert not await page.get_by_text('Rovty Assist', exact=True).count()

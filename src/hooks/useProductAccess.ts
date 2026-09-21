@@ -30,7 +30,7 @@ export function useProductAccess(userId: string | undefined) {
       try {
         const { data, error } = await supabase
           .from('product_access')
-          .select('product, status')
+          .select('product, status, expires_at')
           .eq('user_id', userId!)
           .abortSignal(controller.signal);
         if (controller.signal.aborted) return;
@@ -38,7 +38,7 @@ export function useProductAccess(userId: string | undefined) {
           ? { kind: 'error' }
           : {
               kind: 'ready',
-              access: Object.fromEntries((data ?? []).map((row) => [row.product, row.status === 'active' ? 'active' : 'inactive'])),
+              access: Object.fromEntries((data ?? []).map((row) => [row.product, row.status === 'active' && (!row.expires_at || Date.parse(row.expires_at) > Date.now()) ? 'active' : 'inactive'])),
             };
         setResult({ userId: userId!, state });
       } catch {

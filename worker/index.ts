@@ -1,3 +1,4 @@
+import { handleBilling, type BillingEnv } from "./billing";
 import { handleAssistData, type AssistDataEnv } from "./assist-data";
 import { mintSsoToken, verifySsoToken } from "./sso";
 import { findProduct } from "../shared/products";
@@ -7,10 +8,11 @@ import {
   inspectSession,
   productCaller,
   handlePlatform,
+  rpc,
   type PlatformEnv,
 } from "./platform";
 
-export interface Env extends PlatformEnv, AssistDataEnv {
+export interface Env extends PlatformEnv, AssistDataEnv, BillingEnv {
   ROVTY_ENV?: string;
   ASSETS: Fetcher;
   SUPABASE_URL: string;
@@ -257,26 +259,7 @@ async function handleGrantProductAccess(
   if (!userId)
     return json({ error: "Could not resolve dashboard account" }, 502);
 
-  // Upsert: re-inviting someone (or a retried call) re-affirms `active`
-  // instead of erroring on the (user_id, product) unique constraint.
-  const upsertRes = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/product_access?on_conflict=user_id,product`,
-    {
-      method: "POST",
-      headers: {
-        ...serviceHeaders(env),
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates,return=minimal",
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        product,
-        status: "active",
-        granted_at: new Date().toISOString(),
-      }),
-    },
-  );
-  if (!upsertRes.ok) return json({ error: "Could not grant access" }, 502);
+  await rpc(env, "billing_member_grant", { _user: userId, _product: product });
 
   return json({ ok: true, email, product });
 }
@@ -297,6 +280,16 @@ function withSecurityHeaders(res: Response): Response {
 export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/billing/")) {
+      if (
+        !["/api/billing/webhook", "/api/billing/entitlements"].includes(
+          url.pathname,
+        ) &&
+        (await rateLimited(env, `billing:${url.pathname}:${clientIp(request)}`))
+      )
+        return tooMany();
+      return handleBilling(request, env);
+    }
     if (url.pathname.startsWith("/api/")) {
       if (request.method !== "POST")
         return json({ error: "Method not allowed" }, 405, { Allow: "POST" });

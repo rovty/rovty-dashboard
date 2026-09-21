@@ -10,6 +10,8 @@
     "run_worker_first": true,
   },
   "vars": {
+    "BILLING_MODE": "test",
+    "BILLING_ORIGIN": "https://dashboard-staging.example.com",
     "ROVTY_ENV": "staging",
     "SUPABASE_URL": "https://your-staging-platform-ref.supabase.co",
     "SUPABASE_ANON_KEY": "your-staging-publishable-key",

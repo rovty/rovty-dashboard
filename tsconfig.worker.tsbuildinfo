@@ -1,1 +1,1 @@
-{"root":["./worker/index.ts","./worker/sso.ts","./shared/products.ts"],"version":"5.9.3"}
+{"root":["./worker/assist-data.ts","./worker/billing.ts","./worker/index.ts","./worker/payments-lk.ts","./worker/platform.ts","./worker/sso.ts","./shared/products.ts"],"version":"5.9.3"}

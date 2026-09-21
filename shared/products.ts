@@ -20,7 +20,7 @@ interface ProductDetails {
 
 export interface AvailableProduct extends ProductDetails {
   availability: 'available';
-  /** Marketing/pricing page a user without access is sent to. */
+  /** Dashboard plan selection for a user without product access. */
   pricingUrl: string;
   /** Only launchable products have an SSO origin. */
   originVar: "WED_ORIGIN";
@@ -40,7 +40,7 @@ export const PRODUCTS: readonly Product[] = [
     tagline: "Wedding invitation & guest platform.",
     description:
       "Designed invitation page, personalised WhatsApp links, RSVPs, and seating. Everything your guests need in one link.",
-    pricingUrl: "https://rovty.com/pricing/wed",
+    pricingUrl: "/billing/wed",
     productUrl: "https://rovty.com/products/wed",
     originVar: "WED_ORIGIN",
   },

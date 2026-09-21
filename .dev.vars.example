@@ -16,3 +16,12 @@ WED_WORKER_SECRET=replace-with-a-new-random-wed-only-secret
 # Separate support-data credential, shared only with the marketing Worker.
 ASSIST_DATA_SECRET=replace-with-a-different-random-support-only-secret
 # ASSIST_DATA_SECRET_PREVIOUS=previous-support-only-secret
+
+# Payments.lk. Dashboard Worker only. Never use a VITE_ prefix.
+PAYMENTS_LK_SECRET_KEY=sk_test_replace_with_your_key
+PAYMENTS_LK_WEBHOOK_SECRET=whsec_replace_with_endpoint_secret
+# Optional during signing-secret rotation only:
+# PAYMENTS_LK_WEBHOOK_SECRET_PREVIOUS=whsec_previous_secret
+BILLING_MODE=test
+# Override the production return URL when exercising local checkout.
+BILLING_ORIGIN=http://127.0.0.1:5176

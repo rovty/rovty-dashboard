@@ -31,6 +31,8 @@
   "vars": {
     "SUPABASE_URL": "https://ndhdczyqjrbxnglduukc.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_OUIE4pDkqq_B5jTEA-2kJg_odRS28iA",
-    "WED_ORIGIN": "https://wed.rovty.com"
+    "WED_ORIGIN": "https://wed.rovty.com",
+    "BILLING_MODE": "test",
+    "BILLING_ORIGIN": "https://dash.rovty.com"
   }
 }

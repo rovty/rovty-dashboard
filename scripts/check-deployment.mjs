@@ -131,7 +131,7 @@ if (mode === "staging") {
     ? ["VITE_ROVTY_DASHBOARD_ORIGIN", "VITE_ROVTY_SITE_ORIGIN"]
     : site
       ? ["VITE_ROVTY_DASHBOARD_ORIGIN", "VITE_ROVTY_WED_ORIGIN"]
-      : ["VITE_ROVTY_SITE_ORIGIN"];
+      : ["VITE_ROVTY_SITE_ORIGIN", "VITE_ROVTY_WED_ORIGIN"];
   for (const name of clientOrigins) {
     if (prodOrigins.has(origin(env[name], name)))
       fail(`${name} cannot point to production from staging.`);
@@ -152,6 +152,27 @@ if (mode === "staging") {
         ))
     )
       fail(`${name} still references production.`);
+}
+if (!wed && !site) {
+  if (vars.BILLING_MODE && !["test", "live"].includes(vars.BILLING_MODE))
+    fail("BILLING_MODE must be test or live.");
+  if (mode === "staging" && vars.BILLING_MODE === "live")
+    fail("Staging billing must use test mode.");
+  if (vars.BILLING_ORIGIN) {
+    const billingOrigin = origin(vars.BILLING_ORIGIN, "BILLING_ORIGIN");
+    if (mode === "production" && billingOrigin !== "https://dash.rovty.com")
+      fail("Production billing must return to dash.rovty.com.");
+    if (mode === "staging" && prodOrigins.has(billingOrigin))
+      fail("Staging billing cannot return to production.");
+  }
+  for (const [name, value] of Object.entries(env)) {
+    if (
+      name.startsWith("VITE_") &&
+      typeof value === "string" &&
+      /^(sk_(test|live)_|whsec_)/.test(value)
+    )
+      fail("Payment secrets must never be included in browser variables.");
+  }
 }
 console.log(
   `Validated ${pkg.name}: ${mode} configuration. No deployment or database change performed.`,

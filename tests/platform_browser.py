@@ -54,6 +54,11 @@ async def fixture(browser, signed_in=True, width=1440):
                 if data_path.endswith('/seating_config'): return await r.fulfill(json={'published': False})
                 return await r.fulfill(json=[])
             return await r.fulfill(json={'active': True})
+        if url.startswith(WED + '/api/plan'):
+            if state['revoked'] or not state['active']:
+                return await r.fulfill(status=403, json={'error':'Your product access is no longer active.'})
+            plan={'plan':'studio','active':True,'features':['website','templates','rsvp','guests','seating','team','canvas']}
+            return await r.fulfill(json={'own':plan,'weddings':{WEDDING['id']:plan}})
         if url.startswith(WED + '/api/manage'):
             return await r.fulfill(status=403, json={'error': 'Rovty team access required.'})
         if 'rovty-dashboard-test.supabase.co' in url or 'rovty-wed-test.supabase.co' in url:

@@ -112,7 +112,7 @@ function ProductPanel({ product, active, opening, disabled, onOpen }: { product:
         <p className="product-description">{product.description}</p>
         <div className="product-actions">
           {active ? (
-            <Button onClick={onOpen} loading={opening} disabled={disabled} className="product-launch">{opening ? `Opening ${product.name}…` : `Open ${product.name}`}<ArrowUpRight size={17} aria-hidden="true" /></Button>
+            <><Button onClick={onOpen} loading={opening} disabled={disabled} className="product-launch">{opening ? `Opening ${product.name}…` : `Open ${product.name}`}<ArrowUpRight size={17} aria-hidden="true" /></Button><a href={product.pricingUrl} className="text-link">Plan & payments<ArrowUpRight size={15} aria-hidden="true" /></a></>
           ) : (
             <><ButtonLink href={product.pricingUrl} className="product-launch">Get {product.name}<ArrowUpRight size={17} aria-hidden="true" /></ButtonLink><a href={product.productUrl} className="text-link">Learn more<ArrowUpRight size={15} aria-hidden="true" /></a></>
           )}
