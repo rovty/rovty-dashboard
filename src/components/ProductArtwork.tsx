@@ -1,19 +1,11 @@
 import { ArrowUpRight, MessageSquare, Sparkles, UserRound } from 'lucide-react';
 
-/** Small, local vector compositions: no image requests or layout shifts. */
+/** Local artwork with a reserved frame to keep app cards stable while loading. */
 export default function ProductArtwork({ product }: { product: string }) {
   if (product === 'wed') {
     return (
       <div className="product-artwork wed-artwork" aria-hidden="true">
-        <span className="artwork-index">W / 01</span>
-        <div className="wed-rings"><span /><span /></div>
-        <div className="wed-invitation">
-          <span className="invitation-kicker">A NEW CHAPTER</span>
-          <span className="invitation-title">Together<br /><em>starts here.</em></span>
-          <span className="invitation-rule" />
-          <span className="invitation-footer">A DAY TO REMEMBER. A PLACE TO SHARE.</span>
-        </div>
-        <span className="artwork-caption">DESIGNED FOR YOUR FOREVER</span>
+        <img src="/wed-640.webp" srcSet="/wed-640.webp 640w, /wed-1100.webp 1100w" sizes="(max-width: 599px) calc(100vw - 40px), (max-width: 899px) 35vw, (max-width: 1100px) 30vw, 480px" width={1100} height={912} alt="" decoding="async" />
       </div>
     );
   }

@@ -7,6 +7,7 @@ import asyncio
 import base64
 import json
 import time
+from pathlib import Path
 
 from playwright.async_api import async_playwright, expect
 
@@ -37,7 +38,7 @@ async def fixture(browser, *, access='active', width=1440, authenticated=True, p
             'refresh_token': 'local-test-only', 'expires_in': 3600,
             'expires_at': expires, 'token_type': 'bearer', 'user': user,
         }
-        await context.add_init_script(f"localStorage.setItem('sb-rovty-dashboard-test-auth-token', {json.dumps(json.dumps(session))});")
+        await context.add_init_script(f"if (location.origin === '{BASE}' && !localStorage.getItem('test-seeded')) {{ localStorage.setItem('sb-rovty-dashboard-test-auth-token', {json.dumps(json.dumps(session))}); localStorage.setItem('test-seeded', '1'); }}")
 
     async def route(request_route):
         request = request_route.request
@@ -84,14 +85,28 @@ async def no_overflow(page):
     assert not clipped, f'Clipped controls: {clipped}'
 
 
+async def accessibility(page):
+    axe = Path('/tmp/rovty-axe.min.js')
+    if not axe.exists():
+        print('SKIP: optional axe checks (axe-core is not installed)', flush=True)
+        return
+    await page.add_script_tag(path=str(axe))
+    result = await page.evaluate("axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})")
+    assert not result['violations'], [(v['id'], [n['target'] for n in v['nodes']]) for v in result['violations']]
+
+
 async def run():
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(channel='chrome', headless=True)
         context, page, state = await fixture(browser)
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
         await expect(page.get_by_text('1 app ready to open')).to_be_visible()
-        await expect(page.locator('.account-name')).to_have_text('Alex Morgan')
-        await expect(page.get_by_role('button', name='Sign out', exact=True)).to_be_visible()
+        account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
+        await expect(account).to_be_visible()
+        assert not await page.get_by_role('menuitem', name='Sign out', exact=True).count()
+        assert not await page.locator('footer').count()
+        assert not await page.get_by_text('Workspace', exact=True).count()
+        assert not await page.get_by_role('link', name='Explore Rovty', exact=True).count()
         assert not await page.get_by_text('Rovty Assist', exact=True).count()
         assert not await page.get_by_text('In development', exact=True).count()
         assert not await page.get_by_text('Your account', exact=True).count()
@@ -100,11 +115,57 @@ async def run():
         assert not await page.get_by_role('group', name='Filter products').count()
         assert all('user_id=eq.' + USER['id'] in url for url in state['queries'])
         await no_overflow(page)
+        await accessibility(page)
         await page.screenshot(path='/tmp/rovty-apps-desktop.png', full_page=True)
-        assert await page.locator('.workspace-header').evaluate("el => getComputedStyle(el).backdropFilter") != 'none'
-        await page.get_by_role('navigation', name='Workspace', exact=True).get_by_role('link', name='Apps', exact=True).click()
+        await expect(page.locator('.wed-artwork img')).to_be_visible()
+        await page.locator('.wed-artwork img').evaluate('image => image.decode()')
+        assert await page.locator('.wed-artwork img').evaluate("image => image.currentSrc.endsWith('.webp') && image.naturalWidth > 0")
+        assert await page.locator('.workspace-sidebar').evaluate("el => getComputedStyle(el).backdropFilter") != 'none'
+
+        # Search changes results without changing product access or launching an app.
+        search = page.get_by_role('searchbox', name='Search apps')
+        for query in ['  WED  ', 'wedding seating']:
+            await search.fill(query)
+            await expect(page.get_by_role('status')).to_have_text('1 app found')
+            await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
+        await search.fill('assist')
+        await expect(page.get_by_role('heading', name='No apps found')).to_be_visible()
+        assert not await page.locator('.product-panel').count()
+        await page.get_by_role('search').get_by_role('button', name='Clear search').click()
+        await expect(search).to_be_focused()
+        await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_visible()
+        await search.fill('no matching app')
+        await search.press('Escape')
+        await expect(search).to_have_value('')
+        assert not state['mint_calls']
+
+        # The icon rail retains names and account actions, and survives reload.
+        expanded = await page.locator('.workspace-sidebar').bounding_box()
+        await page.get_by_role('button', name='Collapse menu').click()
+        await expect(page.get_by_role('button', name='Expand menu')).to_have_attribute('aria-expanded', 'false')
+        compact = await page.locator('.workspace-sidebar').bounding_box()
+        assert compact['width'] < expanded['width']
+        await expect(account).to_be_visible()
+        await account.click()
+        await expect(page.get_by_role('menuitem', name='Sign out')).to_be_focused()
+        await no_overflow(page)
+        await accessibility(page)
+        await page.screenshot(path='/tmp/rovty-apps-collapsed.png', full_page=True)
+        await page.keyboard.press('Escape')
+        await expect(account).to_be_focused()
+        await page.reload()
+        await expect(page.get_by_role('button', name='Expand menu')).to_be_visible()
+        await page.get_by_role('button', name='Expand menu').click()
+        await account.focus()
+        await page.keyboard.press('ArrowDown')
+        await expect(page.get_by_role('menuitem', name='Sign out')).to_be_focused()
+        await search.click()
+        await expect(page.get_by_role('menu', name='Account options')).to_be_hidden()
+        print('PASS: search/clear/empty states, hidden development apps, persistent collapse and keyboard account menu', flush=True)
+
+        await page.get_by_role('navigation', name='Main navigation', exact=True).get_by_role('link', name='Apps', exact=True).click()
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_in_viewport()
-        help_link = page.get_by_role('navigation', name='Support and Rovty', exact=True).get_by_role('link', name='Get help')
+        help_link = page.get_by_role('navigation', name='Support', exact=True).get_by_role('link', name='Get help')
         await expect(help_link).to_have_attribute('href', 'https://rovty.com/contact')
         async with page.expect_popup() as popup_info:
             await help_link.click()
@@ -122,30 +183,44 @@ async def run():
         assert state['mint_calls'] == [{'product': 'wed'}, {'product': 'wed'}]
         assert not state['errors'], state['errors']
         await context.close()
-        print('PASS: app launch and retry, direct identity, no development apps, contact form opens, glass header', flush=True)
+        print('PASS: app launch and retry, account identity, no development apps, contact form opens, glass sidebar', flush=True)
 
         for width in [320, 390, 768, 1024, 1920]:
             context, page, state = await fixture(browser, width=width)
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_in_viewport()
-            await expect(page.get_by_role('button', name='Sign out', exact=True)).to_be_in_viewport()
+            account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
+            await expect(account).to_be_in_viewport()
             await no_overflow(page)
             if width == 390:
                 await page.screenshot(path='/tmp/rovty-apps-mobile.png', full_page=True)
-                await expect(page.get_by_role('navigation', name='Mobile workspace').get_by_role('link', name='Get help')).to_be_in_viewport()
+                await expect(page.get_by_role('navigation', name='Mobile navigation').get_by_role('link', name='Get help')).to_be_in_viewport()
+            await account.click()
+            await expect(page.get_by_role('menuitem', name='Sign out')).to_be_in_viewport()
+            await no_overflow(page)
+            if width == 390:
+                await accessibility(page)
+                await page.screenshot(path='/tmp/rovty-apps-mobile-account.png', full_page=True)
+            await page.keyboard.press('Escape')
+            await expect(account).to_be_focused()
+            if width >= 900:
+                await page.get_by_role('button', name='Collapse menu').click()
+                await no_overflow(page)
             assert not state['errors'], state['errors']
             await context.close()
-        print('PASS: 320, 390, 768, 1024, and 1920px layouts; direct mobile help and sign-out', flush=True)
+        print('PASS: 320, 390, 768, 1024, and 1920px layouts; mobile help and account menu', flush=True)
 
         for profile, expected in [({}, USER['email']), ({'full_name': '  ', 'name': 'Provider Name'}, 'Provider Name'), ({'full_name': 'Alexandra Morgan With A Very Long Account Name'}, 'Alexandra Morgan With A Very Long Account Name')]:
             context, page, state = await fixture(browser, width=320, profile=profile)
-            await expect(page.locator('.account-name')).to_have_text(expected)
+            await expect(page.locator('.account-name:visible')).to_have_text(expected)
+            await expect(page.get_by_role('button', name=f'Account options for {expected}', exact=True)).to_be_visible()
             await no_overflow(page)
             await context.close()
         print('PASS: missing, blank, and long profile names', flush=True)
 
         for access in ['empty', 'inactive']:
             context, page, state = await fixture(browser, access=access)
+            await page.get_by_role('searchbox', name='Search apps').fill('WED')
             await expect(page.get_by_role('link', name='Get Rovty Wed')).to_have_attribute('href', 'https://rovty.com/pricing/wed')
             await expect(page.get_by_text('Choose an app to get started.')).to_be_visible()
             assert not await page.get_by_role('button', name='Open Rovty Wed').count()
@@ -171,15 +246,26 @@ async def run():
         for error in [True, False]:
             context, page, state = await fixture(browser)
             state['logout_error'] = error
-            await page.get_by_role('button', name='Sign out', exact=True).click()
+            # Keep the destination local to this test; never use a real account.
+            await context.route('https://rovty.com/', lambda route: route.fulfill(content_type='text/html', body='<h1>Rovty home</h1>'))
+            visited = []
+            page.on('framenavigated', lambda frame: visited.append(frame.url) if frame == page.main_frame else None)
+            await page.get_by_role('button', name='Account options for Alex Morgan', exact=True).click()
+            await page.get_by_role('menuitem', name='Sign out', exact=True).click()
             # Supabase clears the local session even when server revocation fails.
+            await expect(page).to_have_url('https://rovty.com/')
+            await expect(page.get_by_role('heading', name='Rovty home')).to_be_visible()
+            assert f'{BASE}/login' not in visited, 'Logout must not flash the sign-in page'
+            stored = await context.storage_state()
+            dashboard_storage = next(origin['localStorage'] for origin in stored['origins'] if origin['origin'] == BASE)
+            assert not any(item['name'] == 'sb-rovty-dashboard-test-auth-token' for item in dashboard_storage)
+            await page.goto(BASE)
             await expect(page).to_have_url(f'{BASE}/login')
-            assert await page.evaluate("localStorage.getItem('sb-rovty-dashboard-test-auth-token')") is None
             await context.close()
         context, page, state = await fixture(browser, authenticated=False)
         await expect(page).to_have_url(f'{BASE}/login')
         await context.close()
-        print('PASS: direct sign-out, server-error session cleanup, and route protection', flush=True)
+        print('PASS: sign-out goes straight to Rovty home, session clears on server errors, dashboard stays protected', flush=True)
         await browser.close()
         print('Screenshots saved to /tmp/rovty-apps-{desktop,mobile,error}.png', flush=True)
 

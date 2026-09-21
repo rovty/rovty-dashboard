@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ArrowUpRight, Check, RefreshCw } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, Check, RefreshCw, Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AVAILABLE_PRODUCTS, type AvailableProduct } from '../lib/products';
 import { useProductAccess } from '../hooks/useProductAccess';
@@ -12,14 +12,29 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { state, retry } = useProductAccess(user?.id);
   const { opening, error: openError, open } = useProductLaunch();
+  const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = (product: AvailableProduct) => {
+    const text = `${product.name} ${product.tagline} ${product.description}`.toLowerCase();
+    return terms.every((term) => text.includes(term));
+  };
   const activeProducts = state.kind === 'ready'
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] === 'active')
     : [];
   const otherProducts = state.kind === 'ready'
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] !== 'active')
     : [];
+  const matchingActive = activeProducts.filter(matches);
+  const matchingOther = otherProducts.filter(matches);
+  const resultCount = matchingActive.length + matchingOther.length;
+  const searching = terms.length > 0;
+  const clearSearch = () => {
+    setQuery('');
+    searchRef.current?.focus();
+  };
 
-  useEffect(() => { document.title = 'Your workspace | Rovty'; }, []);
+  useEffect(() => { document.title = 'Your apps | Rovty'; }, []);
   const openProduct = (slug: string) => {
     if (state.kind === 'ready' && state.access[slug] === 'active') void open(slug);
   };
@@ -29,12 +44,21 @@ export default function DashboardPage() {
       <section id="apps" className="dashboard-apps" aria-labelledby="apps-heading">
         <header className="apps-heading">
           <div>
-            <p className="eyebrow">Your Rovty workspace</p>
             <h1 id="apps-heading">Your apps</h1>
             <p className="apps-description">{state.kind === 'ready' && activeProducts.length === 0 ? 'Choose an app to get started.' : 'Open an app and pick up where you left off.'}</p>
           </div>
           {state.kind === 'ready' && activeProducts.length > 0 && <span className="apps-count">{activeProducts.length} {activeProducts.length === 1 ? 'app' : 'apps'} ready to open</span>}
         </header>
+
+        <div className="apps-toolbar">
+          <form role="search" aria-label="App search" className="app-search" onSubmit={(event) => event.preventDefault()}>
+            <Search size={18} aria-hidden="true" />
+            <label htmlFor="apps-search" className="sr-only">Search apps</label>
+            <input ref={searchRef} id="apps-search" type="search" placeholder="Search apps" autoComplete="off" maxLength={100} value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Escape') clearSearch(); }} />
+            {query && <button type="button" onClick={clearSearch} aria-label="Clear search" title="Clear search"><X size={18} aria-hidden="true" /></button>}
+          </form>
+          <p className="search-result-count" role="status">{searching && state.kind === 'ready' ? `${resultCount} ${resultCount === 1 ? 'app' : 'apps'} found` : ''}</p>
+        </div>
 
         {openError && <div className="launch-error"><Alert>{openError}</Alert></div>}
         {state.kind === 'loading' && (
@@ -51,18 +75,25 @@ export default function DashboardPage() {
         )}
         {state.kind === 'ready' && (
           <>
-            {activeProducts.length > 0 && (
-              <div className={`product-grid ${activeProducts.length === 1 ? 'single-app' : ''}`}>
-                {activeProducts.map((product) => <ProductPanel key={product.slug} product={product} active opening={opening === product.slug} disabled={opening !== null} onOpen={() => void openProduct(product.slug)} />)}
+            {matchingActive.length > 0 && (
+              <div className={`product-grid ${matchingActive.length === 1 ? 'single-app' : ''}`}>
+                {matchingActive.map((product) => <ProductPanel key={product.slug} product={product} active opening={opening === product.slug} disabled={opening !== null} onOpen={() => void openProduct(product.slug)} />)}
               </div>
             )}
-            {otherProducts.length > 0 && (
-              <section className={activeProducts.length > 0 ? 'explore-apps' : ''} aria-label="Available apps">
+            {matchingOther.length > 0 && (
+              <section className={matchingActive.length > 0 ? 'explore-apps' : ''} aria-label="Available apps">
                 {activeProducts.length > 0 && <h2>Explore apps</h2>}
-                <div className={`product-grid ${otherProducts.length === 1 ? 'single-app' : ''}`}>
-                  {otherProducts.map((product) => <ProductPanel key={product.slug} product={product} active={false} opening={false} disabled={opening !== null} onOpen={() => void openProduct(product.slug)} />)}
+                <div className={`product-grid ${matchingOther.length === 1 ? 'single-app' : ''}`}>
+                  {matchingOther.map((product) => <ProductPanel key={product.slug} product={product} active={false} opening={false} disabled={opening !== null} onOpen={() => void openProduct(product.slug)} />)}
                 </div>
               </section>
+            )}
+            {searching && resultCount === 0 && (
+              <div className="app-search-empty">
+                <h2>No apps found</h2>
+                <p>Try a different app name or keyword.</p>
+                <button type="button" onClick={clearSearch}>Clear search</button>
+              </div>
             )}
           </>
         )}
