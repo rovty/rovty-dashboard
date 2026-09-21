@@ -39,7 +39,7 @@ export const PRODUCTS: readonly Product[] = [
     name: "Rovty Wed",
     tagline: "Wedding invitation & guest platform.",
     description:
-      "Designed invitation page, personalised WhatsApp links, RSVPs, and seating — everything your guests need in one link.",
+      "Designed invitation page, personalised WhatsApp links, RSVPs, and seating. Everything your guests need in one link.",
     pricingUrl: "https://rovty.com/pricing/wed",
     productUrl: "https://rovty.com/products/wed",
     originVar: "WED_ORIGIN",
