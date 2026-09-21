@@ -158,11 +158,11 @@ async def run():
         await page.get_by_role('button', name='Guests', exact=True).click()
         await page.get_by_role('button', name='Design', exact=True).click()
         await page.get_by_role('button', name='Open design studio', exact=True).click()
-        await page.get_by_label('Partner one', exact=True).fill('Unsaved test edit')
+        await page.get_by_label('Your welcome note').fill('Unsaved test edit')
         page.once('dialog', lambda dialog: dialog.dismiss())
         await page.go_back()
         await expect(page).to_have_url(f'{WED}/admin?section=design')
-        await expect(page.get_by_label('Partner one', exact=True)).to_have_value('Unsaved test edit')
+        await expect(page.get_by_label('Your welcome note')).to_have_value('Unsaved test edit')
         assert not state['errors'], state['errors']
         await context.close()
         print('PASS: browser Back protects unsaved studio edits when leaving is cancelled', flush=True)
