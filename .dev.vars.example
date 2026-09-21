@@ -1,13 +1,18 @@
 SSO_SHARED_SECRET=replace-with-a-long-random-secret
-# Presented by a product's own Worker (e.g. rovty-wed's /api/team) when it
-# calls /api/product-access/grant to entitle one of its own team members —
-# must match that product's TEAM_GRANT_SHARED_SECRET exactly. Generate with
-# `openssl rand -hex 32`; set via `wrangler secret put TEAM_GRANT_SHARED_SECRET`
-# in production.
-TEAM_GRANT_SHARED_SECRET=replace-with-a-long-random-secret
 SUPABASE_SERVICE_ROLE_KEY=replace-with-this-projects-service-role-or-secret-key
 
 # Override for local testing only — points the SSO hand-off at a local
 # rovty-wed dev server instead of production. Omit in production; the
 # wrangler.jsonc `vars.WED_ORIGIN` (https://wed.rovty.com) applies there.
 # WED_ORIGIN=http://localhost:8080
+
+# New scoped connection. Set the same WED_WORKER_SECRET in the Wed Worker.
+# Once present, the old TEAM_GRANT_SHARED_SECRET is ignored here.
+# Legacy rollout only: TEAM_GRANT_SHARED_SECRET=old-key
+WED_WORKER_SECRET=replace-with-a-new-random-wed-only-secret
+# Optional temporary rotation window; remove after all Wed isolates use the new key.
+# WED_WORKER_SECRET_PREVIOUS=previous-wed-only-secret
+
+# Separate support-data credential, shared only with the marketing Worker.
+ASSIST_DATA_SECRET=replace-with-a-different-random-support-only-secret
+# ASSIST_DATA_SECRET_PREVIOUS=previous-support-only-secret

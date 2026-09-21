@@ -34,14 +34,17 @@ test('catalog exposes upcoming products without registering them for SSO', () =>
 
 async function mint(t, product, active) {
   const calls = [];
-  t.mock.method(globalThis, 'fetch', async (url) => {
-    calls.push(String(url));
-    if (String(url).endsWith('/auth/v1/user')) return Response.json({ id: 'account-1' });
-    return Response.json(active ? [{ id: 'entitlement-1' }] : []);
+  const uid = '00000000-0000-4000-8000-000000000001';
+  const sid = '00000000-0000-4000-8000-000000000002';
+  const jwt = `a.${Buffer.from(JSON.stringify({ session_id: sid })).toString('base64url')}.b`;
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    calls.push({ url: String(url), body: init?.body ? JSON.parse(init.body) : null });
+    if (String(url).endsWith('/auth/v1/user')) return Response.json({ id: uid });
+    return Response.json(active ? { active: true, user_id: uid, session_id: sid, email: 'user@example.test' } : { active: false, reason: 'access' });
   });
   const response = await worker.fetch(new Request('https://dash.example.test/api/sso/mint', {
     method: 'POST',
-    headers: { Authorization: 'Bearer local-test-session', Origin: 'https://dash.example.test', 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${jwt}`, Origin: 'https://dash.example.test', 'Content-Type': 'application/json' },
     body: JSON.stringify({ product }),
   }), env, {});
   return { response, calls };
@@ -54,10 +57,9 @@ test('active Wed users receive the existing signed hand-off', async (t) => {
   assert.equal(new URL(url).origin, env.WED_ORIGIN);
   assert.equal(new URL(url).pathname, '/sso');
   assert.ok(new URL(url).searchParams.get('token'));
-  const query = new URL(calls[1]).searchParams;
-  assert.equal(query.get('user_id'), 'eq.account-1');
-  assert.equal(query.get('product'), 'eq.wed');
-  assert.equal(query.get('status'), 'eq.active');
+  assert.equal(calls[1].body._user, '00000000-0000-4000-8000-000000000001');
+  assert.equal(calls[1].body._product, 'wed');
+  assert.equal(calls[1].body._session, '00000000-0000-4000-8000-000000000002');
 });
 
 test('inactive Wed users cannot mint a hand-off', async (t) => {

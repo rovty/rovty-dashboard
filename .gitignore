@@ -29,3 +29,9 @@ dist-ssr
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Separate deployment environments
+.env.*
+!.env.example
+!.env.staging.example
+wrangler.staging.jsonc

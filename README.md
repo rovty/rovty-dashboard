@@ -84,8 +84,8 @@ limited per client IP when the `SSO_RATE_LIMITER` binding is present.
 | Endpoint | Caller | Auth |
 |---|---|---|
 | `/api/sso/mint` | browser (this app) | Supabase session bearer; same-origin only |
-| `/api/sso/resolve` | a product Worker (e.g. rovty-wed `/sso`) | `Bearer TEAM_GRANT_SHARED_SECRET` |
-| `/api/product-access/grant` | a product Worker (e.g. rovty-wed `/api/team`) | `Bearer TEAM_GRANT_SHARED_SECRET` |
+| `/api/sso/resolve` | a product Worker (e.g. rovty-wed `/sso`) | `Bearer WED_WORKER_SECRET` |
+| `/api/product-access/grant` | a product Worker (e.g. rovty-wed `/api/team`) | `Bearer WED_WORKER_SECRET` |
 
 Tokens are HMAC-signed, 3-minute, single-use (nonce claimed in `sso_nonces`,
 pruned after 24 h). Products are declared once in `shared/products.ts` and
@@ -163,3 +163,10 @@ uses between "have an account" and "have a paid plan for a given service":
 Same as `rovty.com`: `npm run deploy` builds and pushes via `wrangler` to
 Cloudflare Workers (see `wrangler.jsonc`, name `rovty-dashboard`) — point
 `dash.rovty.com`'s route at that Worker.
+
+## Platform identity release
+
+Read [platform-identity.md](docs/platform-identity.md) before deploying the
+central session, stable account-linking and scoped support changes. It lists
+the exact database targets, coordinated migration order, credential rotation
+and isolated staging setup.

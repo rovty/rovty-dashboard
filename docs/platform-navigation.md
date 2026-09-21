@@ -44,9 +44,10 @@ Changing origins still causes a normal browser document navigation; a SPA
 transition cannot span unrelated origins. Shared branding, short loading
 states, reusable sessions, and predictable history provide continuity.
 
-Sign-out keeps its existing scope: each Supabase project has its own session.
-Dashboard sign-out is not a global revocation of every product session.
-Global logout would require a separate, explicit session-revocation design.
+Sign-out now revokes platform authorization across dashboard and linked product
+sessions before returning to the marketing site. Existing sessions are checked
+on return and before private requests. The coordinated database changes,
+credentials and rollout are documented in [platform-identity.md](platform-identity.md).
 
 ## Deployment configuration
 
@@ -62,10 +63,9 @@ set the following **before building** the frontend:
 The server-side SSO origins must match the deployed environment too:
 
 - Dashboard Worker: `WED_ORIGIN` points to the Wed Worker.
-- Wed Worker: `DASHBOARD_SSO_RESOLVE_URL` points to the dashboard's
-  `/api/sso/resolve`; `DASHBOARD_PRODUCT_ACCESS_GRANT_URL` points to its
-  `/api/product-access/grant`.
-- `TEAM_GRANT_SHARED_SECRET` must match between those two Workers. Keep
+- Wed Worker: `ROVTY_DASHBOARD_ORIGIN` points to the dashboard. Remove stale
+  `DASHBOARD_SSO_RESOLVE_URL` / `DASHBOARD_PRODUCT_ACCESS_GRANT_URL` overrides.
+- `WED_WORKER_SECRET` must match between those two Workers. Keep
   `SSO_SHARED_SECRET` in the dashboard Worker only. Product service-role keys
   remain server-side in their respective Workers.
 

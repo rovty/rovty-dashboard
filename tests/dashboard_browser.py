@@ -43,7 +43,10 @@ async def fixture(browser, *, access='active', width=1440, authenticated=True, p
     async def route(request_route):
         request = request_route.request
         url = request.url
-        if url.startswith(f'{SUPABASE}/rest/v1/product_access'):
+        if url.startswith(f'{BASE}/api/account/'):
+            assert request.headers.get('authorization', '').startswith('Bearer ')
+            await request_route.fulfill(json={'ok': True, 'active': True})
+        elif url.startswith(f'{SUPABASE}/rest/v1/product_access'):
             state['queries'].append(url)
             if state['access'] == 'loading':
                 await asyncio.sleep(1)

@@ -105,7 +105,7 @@ function AccountMenu() {
     setSigningOut(true);
     setError(false);
     try { await signOut(); }
-    catch { setError(true); setSigningOut(false); }
+    catch { setError(true); setSigningOut(false); setOpen(true); }
   };
 
   return (
