@@ -28,7 +28,7 @@ export default function OpenProductPage() {
     return () => window.clearTimeout(timer);
   }, [active, product, slug, open]);
 
-  if (freeProduct) return <main className="min-h-dvh bg-paper text-ink grid place-items-center p-6"><div><h1 className="text-3xl font-semibold mb-5">Rovty PDF</h1><p className="mb-5">Free for everyone. No account is needed in this app.</p><ButtonLink href={freeProduct.launchUrl}>Continue to Rovty PDF</ButtonLink></div></main>;
+  if (freeProduct) return <main className="min-h-dvh bg-paper text-ink grid place-items-center p-6"><div><h1 className="text-3xl font-semibold mb-5">Rovty PDF</h1><p className="mb-5">Free for everyone. Local tools need no account. Cloud features are optional.</p><ButtonLink href={freeProduct.launchUrl}>Continue to Rovty PDF</ButtonLink></div></main>;
   return (
     <main className="min-h-dvh bg-ink text-paper grid place-items-center p-6">
       <div className="w-full max-w-md">

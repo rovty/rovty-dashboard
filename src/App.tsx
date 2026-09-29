@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OpenProductPage from "./pages/OpenProductPage";
+import ConnectPdfPage from "./pages/ConnectPdfPage";
 
 const BillingPage = lazy(() => import("./pages/BillingPage"));
 const BillingOrderPage = lazy(() => import("./pages/BillingOrderPage"));
@@ -23,6 +24,7 @@ function App() {
       }
     >
       <Routes>
+        <Route path="/connect/pdf" element={<ProtectedRoute><ConnectPdfPage /></ProtectedRoute>} />
         <Route
           path="/billing/history"
           element={

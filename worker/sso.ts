@@ -18,6 +18,8 @@ export interface SsoTokenPayload {
   iat: number;
   exp: number;
   nonce: string;
+  challenge?: string;
+  state?: string;
 }
 
 const TOKEN_TTL_MS = 3 * 60_000; // 3 minutes
@@ -60,6 +62,7 @@ export async function mintSsoToken(
   sessionId: string,
   product: string,
   secret: string,
+  context?: { challenge: string; state: string },
 ): Promise<string> {
   const now = Date.now();
   const payload: SsoTokenPayload = {
@@ -69,6 +72,7 @@ export async function mintSsoToken(
     iat: now,
     exp: now + TOKEN_TTL_MS,
     nonce: randomNonce(),
+    ...(context ? { challenge: context.challenge, state: context.state } : {}),
   };
   const encodedPayload = base64UrlEncode(
     new TextEncoder().encode(JSON.stringify(payload)),

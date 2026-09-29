@@ -173,3 +173,17 @@ Read [platform-identity.md](docs/platform-identity.md) before deploying the
 central session, stable account-linking and scoped support changes. It lists
 the exact database targets, coordinated migration order, credential rotation
 and isolated staging setup.
+
+## Optional Rovty PDF cloud identity
+
+PDF's free app card continues to open its local tools without paid access. The
+separate `/connect/pdf` consent screen connects a signed-in account to optional
+cloud storage and sharing. `/api/pdf-auth/mint`, `/resolve` and `/check` validate
+the central account session without a paid entitlement. Hand-offs are bound to
+the initiating browser and redeemed once through `sso_nonces`.
+
+Set `PDF_ORIGIN=https://pdf.rovty.com` (included in `wrangler.jsonc`) and a new
+`PDF_WORKER_SECRET` shared only with the PDF Worker. Do not reuse Wed, billing,
+Assist or Supabase secrets. Deploy this dashboard update before activating PDF
+cloud storage. See `rovty-pdf/README.md` in the sibling project for R2 and Workers
+setup. Existing dashboard identity migrations and SSO secrets remain required.

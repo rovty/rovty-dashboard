@@ -25,3 +25,7 @@ PAYMENTS_LK_WEBHOOK_SECRET=whsec_replace_with_endpoint_secret
 BILLING_MODE=test
 # Override the production return URL when exercising local checkout.
 BILLING_ORIGIN=http://127.0.0.1:5176
+
+# Optional PDF cloud identity; use the same dedicated test secret in rovty-pdf.
+PDF_ORIGIN=http://127.0.0.1:5181
+PDF_WORKER_SECRET=replace-with-a-dedicated-pdf-only-secret

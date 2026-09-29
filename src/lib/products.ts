@@ -38,7 +38,7 @@ export interface FreeProduct {
 }
 export const FREE_PRODUCTS: readonly FreeProduct[] = [{
   slug: 'pdf', name: 'Rovty PDF', tagline: 'Free, private PDF tools.',
-  description: 'Edit, sign, merge, split and compress PDFs with 23 free tools. Your files stay on your device. No account required.',
+  description: '23 free PDF tools with private local editing. Optional cloud storage, sharing and reviews use your Rovty account.',
   productUrl: `${SITE_ORIGIN}/products/pdf`, launchUrl: `${PDF_ORIGIN}/`,
 }];
 export type DashboardProduct = AvailableProduct | FreeProduct;

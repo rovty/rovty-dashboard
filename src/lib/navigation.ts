@@ -10,6 +10,13 @@ export const PDF_ORIGIN = new URL(import.meta.env.VITE_ROVTY_PDF_ORIGIN || "http
 export function signInDestination(value: unknown): string {
   if (typeof value !== "string") return "/";
   if (value === "/" || value === "/#apps") return value;
+  if (value.startsWith('/connect/pdf?')) {
+    const url = new URL(value, 'https://dashboard.invalid');
+    if (url.pathname === '/connect/pdf' && !url.hash &&
+        [...url.searchParams.keys()].sort().join(',') === 'challenge,state' &&
+        /^[a-f0-9]{64}$/.test(url.searchParams.get('state') || '') &&
+        /^[a-f0-9]{64}$/.test(url.searchParams.get('challenge') || '')) return url.pathname + url.search;
+  }
   // Product names are validated again against the catalog by OpenProductPage.
   if (/^\/open\/[a-z0-9-]+$/.test(value)) return value;
   if (

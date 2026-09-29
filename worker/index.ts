@@ -1,6 +1,7 @@
 import { handleBilling, type BillingEnv } from "./billing";
 import { handleAssistData, type AssistDataEnv } from "./assist-data";
 import { mintSsoToken, verifySsoToken } from "./sso";
+import { handlePdfAuth } from "./pdf-auth";
 import { findProduct } from "../shared/products";
 import {
   callerSession,
@@ -23,6 +24,8 @@ export interface Env extends PlatformEnv, AssistDataEnv, BillingEnv {
   // var *name* per product lives in shared/products.ts; the value lives in
   // wrangler.jsonc (prod) / .dev.vars (local).
   WED_ORIGIN: string;
+  PDF_ORIGIN?: string;
+  PDF_WORKER_SECRET?: string;
   // Optional Cloudflare rate-limit binding (wrangler.jsonc `ratelimits`).
   // When absent (plain local dev) endpoints work, just unlimited.
   SSO_RATE_LIMITER?: RateLimit;
@@ -294,6 +297,10 @@ export default {
       if (request.method !== "POST")
         return json({ error: "Method not allowed" }, 405, { Allow: "POST" });
       try {
+        if (url.pathname.startsWith('/api/pdf-auth/')) {
+          if (await rateLimited(env, `pdf-auth:${clientIp(request)}`)) return tooMany();
+          return await handlePdfAuth(request, env, ctx);
+        }
         if (url.pathname === "/api/assist-data")
           return await handleAssistData(request, env);
         if (
