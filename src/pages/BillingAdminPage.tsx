@@ -367,8 +367,8 @@ export default function BillingAdminPage() {
               <p className="billing-notice">{o.review_reason}</p>
             )}
             <p>
-              Refunds are issued in Payments.lk. A signed full-refund event
-              removes access granted by that order.
+              Refunds are issued through the payment provider. Once a full refund
+              is confirmed, access granted by that order is removed.
             </p>
           </details>
         ))}

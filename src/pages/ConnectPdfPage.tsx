@@ -47,7 +47,7 @@ export default function ConnectPdfPage() {
         <p className="text-xs uppercase tracking-widest mb-4">Rovty account</p>
         <h1 className="text-3xl font-bold mb-5">Connect to Rovty PDF</h1>
         <p className="mb-4">
-          Use {user?.email} for your optional PDF cloud workspace. Rovty PDF
+          Use {user?.email} for your optional PDF workspace in Rovty Cloud. Rovty PDF
           receives your account ID and email to keep your saved documents,
           templates and preferences together.
         </p>
@@ -58,7 +58,7 @@ export default function ConnectPdfPage() {
         </p>
         {!valid && (
           <p role="alert" className="mb-4">
-            Start sign-in from the Rovty PDF cloud workspace.
+            Start sign-in from Rovty Cloud in Rovty PDF.
           </p>
         )}
         {error && (

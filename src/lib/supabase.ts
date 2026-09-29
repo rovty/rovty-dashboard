@@ -4,10 +4,10 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!url || !anonKey) {
-  // Loud and early, not a cryptic "Failed to fetch" the first time someone
-  // tries to sign in. See .env.example for what's needed.
+  // Deployment configuration is documented in .env.example. Keep any error
+  // surfaced to customers independent of the identity provider.
   throw new Error(
-    'Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. Copy .env.example to .env and fill in your Supabase project values.'
+    'Rovty sign-in is temporarily unavailable. Please try again later.'
   );
 }
 

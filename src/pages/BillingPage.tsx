@@ -173,8 +173,8 @@ export default function BillingPage() {
             <div>
               <h2>Your {plan.name} plan</h2>
               <p>
-                You’ll pay securely on Payments.lk. Access begins after payment
-                is confirmed.
+                You’ll continue to our payment provider’s secure checkout. Access
+                begins after payment is confirmed.
               </p>
               <label>
                 Promotion code <span>(optional)</span>
