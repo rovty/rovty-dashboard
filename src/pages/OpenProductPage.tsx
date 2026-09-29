@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { findProduct } from '../lib/products';
+import { findProduct, FREE_PRODUCTS } from '../lib/products';
 import { useAuth } from '../context/AuthContext';
 import { useProductAccess } from '../hooks/useProductAccess';
 import { useProductLaunch } from '../hooks/useProductLaunch';
@@ -10,11 +10,13 @@ import { Alert, Button, ButtonLink } from '../components/ui';
 export default function OpenProductPage() {
   const { product: slug = '' } = useParams();
   const product = findProduct(slug);
+  const freeProduct = FREE_PRODUCTS.find(item => item.slug === slug);
   const { user } = useAuth();
   const { state, retry } = useProductAccess(user?.id);
   const { open, opening, error } = useProductLaunch();
   const attempted = useRef(false);
   const active = state.kind === 'ready' && state.access[slug] === 'active';
+  useEffect(() => { if (freeProduct) window.location.replace(freeProduct.launchUrl); }, [freeProduct]);
 
   useEffect(() => {
     if (!product || !active || attempted.current) return;
@@ -26,6 +28,7 @@ export default function OpenProductPage() {
     return () => window.clearTimeout(timer);
   }, [active, product, slug, open]);
 
+  if (freeProduct) return <main className="min-h-dvh bg-paper text-ink grid place-items-center p-6"><div><h1 className="text-3xl font-semibold mb-5">Rovty PDF</h1><p className="mb-5">Free for everyone. No account is needed in this app.</p><ButtonLink href={freeProduct.launchUrl}>Continue to Rovty PDF</ButtonLink></div></main>;
   return (
     <main className="min-h-dvh bg-ink text-paper grid place-items-center p-6">
       <div className="w-full max-w-md">

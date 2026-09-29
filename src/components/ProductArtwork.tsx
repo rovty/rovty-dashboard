@@ -2,6 +2,7 @@ import { ArrowUpRight, MessageSquare, Sparkles, UserRound } from 'lucide-react';
 
 /** Local artwork with a reserved frame to keep app cards stable while loading. */
 export default function ProductArtwork({ product }: { product: string }) {
+  if (product === 'pdf') return <div className="product-artwork pdf-artwork" aria-hidden="true"><img src="/pdf-preview.svg" width={1200} height={900} alt="" decoding="async"/></div>;
   if (product === 'wed') {
     return (
       <div className="product-artwork wed-artwork" aria-hidden="true">

@@ -5,7 +5,7 @@ import {
   type AvailableProduct,
   type Product,
 } from "../../shared/products";
-import { SITE_ORIGIN } from "./navigation";
+import { SITE_ORIGIN, PDF_ORIGIN } from "./navigation";
 
 export const PRODUCTS: readonly Product[] = CATALOG.map((product) => ({
   ...product,
@@ -29,3 +29,16 @@ export function findProduct(slug: string): AvailableProduct | undefined {
   return AVAILABLE_PRODUCTS.find((product) => product.slug === slug);
 }
 export type { Product, AvailableProduct } from "../../shared/products";
+
+// Free external apps have no billing, entitlement record or SSO hand-off.
+// Keep them outside the paid Worker registry so they cannot acquire auth tokens.
+export interface FreeProduct {
+  slug: string; name: string; tagline: string; description: string;
+  productUrl: string; launchUrl: string;
+}
+export const FREE_PRODUCTS: readonly FreeProduct[] = [{
+  slug: 'pdf', name: 'Rovty PDF', tagline: 'Free, private PDF tools.',
+  description: 'Edit, sign, merge, split and compress PDFs with 23 free tools. Your files stay on your device. No account required.',
+  productUrl: `${SITE_ORIGIN}/products/pdf`, launchUrl: `${PDF_ORIGIN}/`,
+}];
+export type DashboardProduct = AvailableProduct | FreeProduct;

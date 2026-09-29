@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<rect width="1200" height="900" fill="#e6ecdd"/><circle cx="1110" cy="0" r="310" fill="#d5dfc7"/>
+<g transform="translate(175 130) rotate(-7 350 310)"><rect x="26" y="32" width="760" height="620" rx="6" fill="#bdc8b0" opacity=".45"/><rect width="760" height="620" rx="6" fill="#fffefa"/>
+<rect width="760" height="57" rx="6" fill="#202022"/><text x="30" y="38" fill="#fffefa" font-family="Arial,sans-serif" font-size="25" font-weight="700">ROVTY <tspan font-size="18">PDF</tspan></text><circle cx="702" cy="28" r="6" fill="#d9e3c4"/>
+<text x="62" y="120" fill="#6e775f" font-family="Arial,sans-serif" font-size="14" letter-spacing="3">MADE FOR THE EVERYDAY.</text>
+<text x="62" y="204" fill="#202022" font-family="Arial,sans-serif" font-size="52" font-weight="700">A little less</text><text x="62" y="267" fill="#202022" font-family="Arial,sans-serif" font-size="52" font-weight="700">paperwork.</text>
+<rect x="53" y="149" width="446" height="138" fill="none" stroke="#647e54" stroke-width="2" stroke-dasharray="9 6"/><rect x="493" y="281" width="12" height="12" fill="#fff" stroke="#647e54" stroke-width="2"/>
+<path d="M65 334H585M65 361H640M65 388H451" stroke="#d1d4c9" stroke-width="8"/>
+<rect x="60" y="440" width="264" height="48" fill="#f0df99"/><text x="78" y="471" fill="#4f543f" font-family="Arial,sans-serif" font-size="21">Edit. Sign. Make it yours.</text>
+<path d="M438 520Q471 433 490 467T469 530M447 506L507 492Q515 530 533 492T553 508Q571 530 591 495L616 513M432 552Q552 516 660 528" stroke="#2c5285" stroke-width="4" fill="none" stroke-linecap="round"/>
+<text x="61" y="578" fill="#6e775f" font-family="Arial,sans-serif" font-size="13" letter-spacing="2">YOUR FILES STAY ON YOUR DEVICE.</text></g>
+<g transform="translate(895 305) rotate(8)"><rect width="119" height="119" rx="18" fill="#f1c5b3"/><path d="M35 32H68L84 48V85H35Z M68 32V48H84 M48 69L68 49L76 57L56 77L45 80Z" fill="none" stroke="#6c4734" stroke-width="3" stroke-linejoin="round"/></g>
+</svg>

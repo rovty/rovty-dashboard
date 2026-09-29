@@ -106,7 +106,7 @@ async def run():
         browser = await playwright.chromium.launch(channel='chrome', headless=True)
         context, page, state = await fixture(browser)
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
-        await expect(page.get_by_text('1 app ready to open')).to_be_visible()
+        await expect(page.get_by_text('2 apps ready to open')).to_be_visible()
         account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
         await expect(account).to_be_visible()
         assert not await page.get_by_role('menuitem', name='Sign out', exact=True).count()
@@ -240,7 +240,7 @@ async def run():
             payments = card.get_by_role('link', name='Plan & payments')
             await expect(payments).to_have_attribute('href', '/billing/wed')
             await expect(card.locator('a, button:enabled')).to_have_count(1)
-            await expect(page.get_by_text('Choose an app to get started.')).to_be_visible()
+            await expect(page.get_by_text('Open an app and pick up where you left off.')).to_be_visible()
             assert not await page.get_by_text('Rovty Assist', exact=True).count()
             await no_overflow(page)
             await page.screenshot(path=f'/tmp/rovty-apps-locked-{width}.png', full_page=True)
@@ -267,6 +267,20 @@ async def run():
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
         await context.close()
         print('PASS: loading, errors, and access retry', flush=True)
+        for access in ['empty', 'inactive', 'expired', 'error', 'loading']:
+            context, page, state = await fixture(browser, access=access)
+            pdf = page.get_by_role('article', name='Rovty PDF', exact=True)
+            await expect(pdf.get_by_text('Free for everyone', exact=True)).to_be_visible()
+            launch = pdf.get_by_role('link', name='Open Rovty PDF', exact=True)
+            await expect(launch).to_have_attribute('href', 'https://pdf.rovty.com/')
+            assert not await pdf.get_by_role('link', name='Plan & payments').count()
+            await context.route('https://pdf.rovty.com/', lambda route: route.fulfill(content_type='text/html', body='<h1>Rovty PDF opened directly</h1>'))
+            await launch.click()
+            await expect(page.get_by_role('heading', name='Rovty PDF opened directly')).to_be_visible()
+            assert state['mint_calls'] == []
+            await context.close()
+        print('PASS: free PDF opens directly without entitlement or SSO, including access service failures', flush=True)
+
 
         for error in [True, False]:
             context, page, state = await fixture(browser)

@@ -103,6 +103,8 @@
 
 /* Product artwork intentionally differs, just as the products do. */
 .product-artwork { height: 220px; position: relative; overflow: hidden; flex-shrink: 0; }
+.pdf-artwork { background: #e6ecdd; }
+.pdf-artwork img { width: 100%; height: 100%; object-fit: cover; }
 .artwork-index { position: absolute; top: 19px; left: 22px; font-size: 9px; font-weight: 600; letter-spacing: .12em; z-index: 1; }
 .artwork-caption { position: absolute; bottom: 16px; left: 22px; right: 15px; font-size: 6px; letter-spacing: .17em; font-weight: 500; }
 .wed-artwork { background: #d7d3ca; }

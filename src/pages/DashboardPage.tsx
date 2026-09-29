@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Lock, RefreshCw, Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { AVAILABLE_PRODUCTS, type AvailableProduct } from '../lib/products';
+import { AVAILABLE_PRODUCTS, FREE_PRODUCTS, type DashboardProduct } from '../lib/products';
 import { useProductAccess } from '../hooks/useProductAccess';
 import { useProductLaunch } from '../hooks/useProductLaunch';
 import AppShell from '../components/AppShell';
@@ -15,13 +15,14 @@ export default function DashboardPage() {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const matches = (product: AvailableProduct) => {
+  const matches = (product: DashboardProduct) => {
     const text = `${product.name} ${product.tagline} ${product.description}`.toLowerCase();
     return terms.every((term) => text.includes(term));
   };
-  const activeProducts = state.kind === 'ready'
+  const paidActiveProducts = state.kind === 'ready'
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] === 'active')
     : [];
+  const activeProducts: DashboardProduct[] = [...paidActiveProducts, ...FREE_PRODUCTS];
   const otherProducts = state.kind === 'ready'
     ? AVAILABLE_PRODUCTS.filter((product) => state.access[product.slug] !== 'active')
     : [];
@@ -47,7 +48,7 @@ export default function DashboardPage() {
             <h1 id="apps-heading">Your apps</h1>
             <p className="apps-description">{state.kind === 'ready' && activeProducts.length === 0 ? 'Choose an app to get started.' : 'Open an app and pick up where you left off.'}</p>
           </div>
-          {state.kind === 'ready' && activeProducts.length > 0 && <span className="apps-count">{activeProducts.length} {activeProducts.length === 1 ? 'app' : 'apps'} ready to open</span>}
+          {activeProducts.length > 0 && <span className="apps-count">{activeProducts.length} {activeProducts.length === 1 ? 'app' : 'apps'} ready to open</span>}
         </header>
 
         <div className="apps-toolbar">
@@ -73,7 +74,7 @@ export default function DashboardPage() {
             <button type="button" onClick={retry}><RefreshCw size={16} aria-hidden="true" />Try again</button>
           </div>
         )}
-        {state.kind === 'ready' && (
+        {(
           <>
             {matchingActive.length > 0 && (
               <div className={`product-grid ${matchingActive.length === 1 ? 'single-app' : ''}`}>
@@ -88,7 +89,7 @@ export default function DashboardPage() {
                 </div>
               </section>
             )}
-            {searching && resultCount === 0 && (
+            {searching && resultCount === 0 && state.kind === 'ready' && (
               <div className="app-search-empty">
                 <h2>No apps found</h2>
                 <p>Try a different app name or keyword.</p>
@@ -102,17 +103,18 @@ export default function DashboardPage() {
   );
 }
 
-function ProductPanel({ product, active, opening, disabled, onOpen }: { product: AvailableProduct; active: boolean; opening: boolean; disabled: boolean; onOpen: () => void }) {
+function ProductPanel({ product, active, opening, disabled, onOpen }: { product: DashboardProduct; active: boolean; opening: boolean; disabled: boolean; onOpen: () => void }) {
+  const free = 'launchUrl' in product;
   return (
     <article className={`product-panel${active ? '' : ' product-panel--locked'}`} aria-labelledby={`product-${product.slug}`}>
       <ProductArtwork product={product.slug} />
       <div className="product-panel-content">
-        <span id={`product-status-${product.slug}`} className={`product-status ${active ? 'status-active' : ''}`}>{active ? <Check size={13} aria-hidden="true" /> : <Lock size={13} aria-hidden="true" />}{active ? 'You have access' : 'No access'}</span>
+        <span id={`product-status-${product.slug}`} className={`product-status ${active ? 'status-active' : ''}`}>{active ? <Check size={13} aria-hidden="true" /> : <Lock size={13} aria-hidden="true" />}{free ? 'Free for everyone' : active ? 'You have access' : 'No access'}</span>
         <h2 id={`product-${product.slug}`}>{product.name}</h2>
         <p className="product-description">{product.description}</p>
         <div className="product-actions">
-          <Button onClick={active ? onOpen : undefined} loading={opening} disabled={!active || disabled} aria-describedby={`product-status-${product.slug}`} className="product-launch">{opening ? `Opening ${product.name}…` : `Open ${product.name}`}<ArrowUpRight size={17} aria-hidden="true" /></Button>
-          {active ? (
+          {free ? <ButtonLink href={product.launchUrl} referrerPolicy="no-referrer" className="product-launch">Open {product.name}<ArrowUpRight size={17} aria-hidden="true" /></ButtonLink> : <Button onClick={active ? onOpen : undefined} loading={opening} disabled={!active || disabled} aria-describedby={`product-status-${product.slug}`} className="product-launch">{opening ? `Opening ${product.name}…` : `Open ${product.name}`}<ArrowUpRight size={17} aria-hidden="true" /></Button>}
+          {free ? <a href={product.productUrl} className="text-link">About Rovty PDF<ArrowUpRight size={15} aria-hidden="true" /></a> : active ? (
             <a href={product.pricingUrl} className="text-link">Plan & payments<ArrowUpRight size={15} aria-hidden="true" /></a>
           ) : (
             <ButtonLink href={product.pricingUrl} className="product-payment">Plan & payments<ArrowUpRight size={17} aria-hidden="true" /></ButtonLink>

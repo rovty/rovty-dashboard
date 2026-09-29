@@ -4,6 +4,7 @@ export const WED_ORIGIN = new URL(
 export const SITE_ORIGIN = new URL(
   import.meta.env.VITE_ROVTY_SITE_ORIGIN || "https://rovty.com",
 ).origin;
+export const PDF_ORIGIN = new URL(import.meta.env.VITE_ROVTY_PDF_ORIGIN || "https://pdf.rovty.com").origin;
 
 /** Sign-in only returns to known local screens, never an arbitrary URL. */
 export function signInDestination(value: unknown): string {
