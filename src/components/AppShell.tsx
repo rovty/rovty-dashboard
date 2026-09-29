@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ArrowUpRight, CreditCard, ChevronUp, Grid2X2, LifeBuoy, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { accountName } from '../lib/account';
+import { accountEmail } from '../lib/account';
 import { SITE_ORIGIN } from '../lib/navigation';
 
 const SUPPORT_URL = `${SITE_ORIGIN}/contact`;
@@ -73,7 +73,7 @@ function AccountMenu() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const signOutRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
-  const name = accountName(user);
+  const email = accountEmail(user);
 
   useEffect(() => {
     if (!open) return;
@@ -113,18 +113,18 @@ function AccountMenu() {
     <div className="account-control" ref={containerRef} onBlur={(event) => {
       if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
     }}>
-      <button ref={triggerRef} type="button" className="account-trigger" aria-label={`Account options for ${name}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} title={name} onClick={() => setOpen((value) => !value)} onKeyDown={(event) => {
+      <button ref={triggerRef} type="button" className="account-trigger" aria-label={`Account options for ${email}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} title={email} onClick={() => setOpen((value) => !value)} onKeyDown={(event) => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true); }
       }}>
-        <span className="account-avatar" aria-hidden="true">{Array.from(name)[0].toUpperCase()}</span>
-        <span className="account-name sidebar-text">{name}</span>
+        <span className="account-avatar" aria-hidden="true">{Array.from(email)[0].toUpperCase()}</span>
+        <span className="account-name sidebar-text">{email}</span>
         <ChevronUp className="account-chevron" size={14} aria-hidden="true" />
       </button>
       {open && (
         <div id={menuId} className="account-menu workspace-glass" role="menu" aria-label="Account options" onKeyDown={(event) => {
           if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); signOutRef.current?.focus(); }
         }}>
-          <p className="account-menu-name">{name}</p>
+          <p className="account-menu-name">{email}</p>
           <button ref={signOutRef} role="menuitem" className="sign-out-button" type="button" disabled={signingOut} onClick={() => void handleSignOut()}>
             <LogOut size={16} aria-hidden="true" /><span>{signingOut ? 'Signing out…' : 'Sign out'}</span>
           </button>

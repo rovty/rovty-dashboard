@@ -107,7 +107,7 @@ async def run():
         context, page, state = await fixture(browser)
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
         await expect(page.get_by_text('1 app ready to open')).to_be_visible()
-        account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
+        account = page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True)
         await expect(account).to_be_visible()
         assert not await page.get_by_role('menuitem', name='Sign out', exact=True).count()
         assert not await page.locator('footer').count()
@@ -195,7 +195,7 @@ async def run():
             context, page, state = await fixture(browser, width=width)
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_in_viewport()
-            account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
+            account = page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True)
             await expect(account).to_be_in_viewport()
             await no_overflow(page)
             if width == 390:
@@ -216,13 +216,14 @@ async def run():
             await context.close()
         print('PASS: 320, 390, 768, 1024, and 1920px layouts; mobile help and account menu', flush=True)
 
-        for profile, expected in [({}, USER['email']), ({'full_name': '  ', 'name': 'Provider Name'}, 'Provider Name'), ({'full_name': 'Alexandra Morgan With A Very Long Account Name'}, 'Alexandra Morgan With A Very Long Account Name')]:
+        for profile in [{}, {'full_name': '  ', 'name': 'Provider Name'}, {'full_name': 'Alexandra Morgan With A Very Long Account Name'}]:
             context, page, state = await fixture(browser, width=320, profile=profile)
+            expected = USER['email']
             await expect(page.locator('.account-name:visible')).to_have_text(expected)
             await expect(page.get_by_role('button', name=f'Account options for {expected}', exact=True)).to_be_visible()
             await no_overflow(page)
             await context.close()
-        print('PASS: missing, blank, and long profile names', flush=True)
+        print('PASS: account email is shown regardless of profile name', flush=True)
 
         for access in ['empty', 'inactive']:
             context, page, state = await fixture(browser, access=access)
@@ -256,7 +257,7 @@ async def run():
             await context.route('https://rovty.com/', lambda route: route.fulfill(content_type='text/html', body='<h1>Rovty home</h1>'))
             visited = []
             page.on('framenavigated', lambda frame: visited.append(frame.url) if frame == page.main_frame else None)
-            await page.get_by_role('button', name='Account options for Alex Morgan', exact=True).click()
+            await page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True).click()
             await page.get_by_role('menuitem', name='Sign out', exact=True).click()
             # Supabase clears the local session even when server revocation fails.
             await expect(page).to_have_url('https://rovty.com/')

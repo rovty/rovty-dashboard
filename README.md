@@ -18,15 +18,16 @@ The dashboard is an app launcher using the marketing site's ink-and-paper
 palette and Archivo typography. Subtle glass is limited to the header and
 navigation, with opaque fallbacks and reduced-transparency support. Apps are
 solid and readable. The mobile navigation exposes Apps and Get help directly.
-The signed-in name (or email when no profile name exists) and Sign out are
-visible in the header. There is no account submenu or redundant account page.
+The signed-in email appears in the account button at the bottom of the sidebar
+and in mobile navigation. Clicking it opens a menu above with the full email
+and Sign out.
 Get help opens the existing `https://rovty.com/contact` form in a new tab.
 
 - `src/components/AppShell.tsx`: glass navigation, signed-in identity, support,
   and direct sign-out.
 - `src/pages/DashboardPage.tsx`: accessible apps first, direct app launch, and
   released apps available to add. No development listings or catalog filters.
-- `src/lib/account.ts`: profile-name resolution across sign-in providers.
+- `src/lib/account.ts`: signed-in email display across sign-in providers.
 - `src/lib/products.ts`: released-app selection for all dashboard content.
 - `src/hooks/useProductAccess.ts`: cancellable, user-scoped access loading and
   retry. Failed requests never appear as missing entitlements.
@@ -58,8 +59,8 @@ python3 tests/dashboard_browser.py
 
 The browser script requires Python Playwright and installed Chrome. It uses
 only a local test session, stubs all auth/access/SSO calls, and checks active,
-inactive, empty, loading, and failed access; hidden development apps; profile
-names; mobile layout; direct sign-out; and the product hand-off. It also opens
+inactive, empty, loading, and failed access; hidden development apps; account
+emails; mobile layout; direct sign-out; and the product hand-off. It also opens
 the live Rovty contact form without submitting it. Screenshots go to `/tmp`.
 
 ## Setup
