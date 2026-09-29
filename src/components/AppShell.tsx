@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ArrowUpRight, CreditCard, ChevronUp, Grid2X2, LifeBuoy, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { accountEmail } from '../lib/account';
+import { accountEmail, accountName } from '../lib/account';
 import { SITE_ORIGIN } from '../lib/navigation';
 
 const SUPPORT_URL = `${SITE_ORIGIN}/contact`;
@@ -73,6 +73,7 @@ function AccountMenu() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const signOutRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
+  const name = accountName(user);
   const email = accountEmail(user);
 
   useEffect(() => {
@@ -113,11 +114,11 @@ function AccountMenu() {
     <div className="account-control" ref={containerRef} onBlur={(event) => {
       if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
     }}>
-      <button ref={triggerRef} type="button" className="account-trigger" aria-label={`Account options for ${email}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} title={email} onClick={() => setOpen((value) => !value)} onKeyDown={(event) => {
+      <button ref={triggerRef} type="button" className="account-trigger" aria-label={`Account options for ${name}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} title={name} onClick={() => setOpen((value) => !value)} onKeyDown={(event) => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true); }
       }}>
-        <span className="account-avatar" aria-hidden="true">{Array.from(email)[0].toUpperCase()}</span>
-        <span className="account-name sidebar-text">{email}</span>
+        <span className="account-avatar" aria-hidden="true">{Array.from(name)[0].toUpperCase()}</span>
+        <span className="account-name sidebar-text">{name}</span>
         <ChevronUp className="account-chevron" size={14} aria-hidden="true" />
       </button>
       {open && (

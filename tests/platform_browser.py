@@ -109,7 +109,7 @@ async def session_flows(browser):
         await expect(other.get_by_role('heading', name='Your apps')).to_be_visible()
         actor, observer = (other, page) if logout_from == 'dashboard' else (page, other)
         if logout_from == 'dashboard':
-            await actor.get_by_role('button', name=f'Account options for {USER["email"]}').click()
+            await actor.get_by_role('button', name='Account options for Alex Morgan').click()
             await actor.get_by_role('menuitem', name='Sign out').click()
         else:
             await actor.get_by_role('button', name='Sign out', exact=True).click()
@@ -156,7 +156,7 @@ async def recovery_flows(browser):
     await page.goto(DASH, wait_until='domcontentloaded')
     await expect(page.get_by_role('heading', name='Your apps')).to_be_visible()
     state['outage'] = True
-    await page.get_by_role('button', name=f'Account options for {USER["email"]}').click()
+    await page.get_by_role('button', name='Account options for Alex Morgan').click()
     await page.get_by_role('menuitem', name='Sign out').click()
     await expect(page.get_by_role('alert')).to_contain_text('Couldn’t sign out. Please try again.')
     assert state['logouts'] == []
@@ -269,7 +269,8 @@ async def run():
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
         state['active'] = False
         await page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
-        await expect(page.get_by_role('link', name='Get Rovty Wed')).to_be_visible()
+        await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_disabled()
+        await expect(page.get_by_role('link', name='Plan & payments')).to_be_visible()
         await page.evaluate("localStorage.removeItem('sb-rovty-dashboard-test-auth-token'); window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
         await expect(page).to_have_url(f'{DASH}/login')
         await context.close()

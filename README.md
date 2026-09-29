@@ -18,16 +18,18 @@ The dashboard is an app launcher using the marketing site's ink-and-paper
 palette and Archivo typography. Subtle glass is limited to the header and
 navigation, with opaque fallbacks and reduced-transparency support. Apps are
 solid and readable. The mobile navigation exposes Apps and Get help directly.
-The signed-in email appears in the account button at the bottom of the sidebar
-and in mobile navigation. Clicking it opens a menu above with the full email
-and Sign out.
+Apps with active access have an enabled Open button. Without access, the card
+is muted, Open is disabled, and Plan & payments is its only enabled action.
+The user's name appears in the account button at the bottom of the sidebar
+and in mobile navigation, with “Your account” as the fallback for missing names.
+Clicking it opens a menu above with the email and Sign out.
 Get help opens the existing `https://rovty.com/contact` form in a new tab.
 
 - `src/components/AppShell.tsx`: glass navigation, signed-in identity, support,
   and direct sign-out.
 - `src/pages/DashboardPage.tsx`: accessible apps first, direct app launch, and
   released apps available to add. No development listings or catalog filters.
-- `src/lib/account.ts`: signed-in email display across sign-in providers.
+- `src/lib/account.ts`: profile name and email display across sign-in providers.
 - `src/lib/products.ts`: released-app selection for all dashboard content.
 - `src/hooks/useProductAccess.ts`: cancellable, user-scoped access loading and
   retry. Failed requests never appear as missing entitlements.

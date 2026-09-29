@@ -53,7 +53,7 @@ async def fixture(browser, *, access='active', width=1440, authenticated=True, p
             if state['access'] == 'error':
                 await request_route.fulfill(status=503, json={'message': 'Temporarily unavailable'})
             else:
-                rows = [] if state['access'] == 'empty' else [{'product': 'wed', 'status': 'active' if state['access'] == 'loading' else state['access']}, {'product': 'assist', 'status': 'active'}, {'product': 'unknown', 'status': 'active'}]
+                rows = [] if state['access'] == 'empty' else [{'product': 'wed', 'status': 'active' if state['access'] in ['loading', 'expired'] else state['access'], 'expires_at': '2020-01-01T00:00:00Z' if state['access'] == 'expired' else None}, {'product': 'assist', 'status': 'active'}, {'product': 'unknown', 'status': 'active'}]
                 await request_route.fulfill(json=rows)
         elif url.startswith(f'{SUPABASE}/auth/v1/logout'):
             await request_route.fulfill(status=500 if state['logout_error'] else 204, body=json.dumps({'message': 'Retry sign out'}) if state['logout_error'] else '')
@@ -107,7 +107,7 @@ async def run():
         context, page, state = await fixture(browser)
         await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
         await expect(page.get_by_text('1 app ready to open')).to_be_visible()
-        account = page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True)
+        account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
         await expect(account).to_be_visible()
         assert not await page.get_by_role('menuitem', name='Sign out', exact=True).count()
         assert not await page.locator('footer').count()
@@ -195,7 +195,7 @@ async def run():
             context, page, state = await fixture(browser, width=width)
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_enabled()
             await expect(page.get_by_role('button', name='Open Rovty Wed')).to_be_in_viewport()
-            account = page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True)
+            account = page.get_by_role('button', name='Account options for Alex Morgan', exact=True)
             await expect(account).to_be_in_viewport()
             await no_overflow(page)
             if width == 390:
@@ -216,29 +216,47 @@ async def run():
             await context.close()
         print('PASS: 320, 390, 768, 1024, and 1920px layouts; mobile help and account menu', flush=True)
 
-        for profile in [{}, {'full_name': '  ', 'name': 'Provider Name'}, {'full_name': 'Alexandra Morgan With A Very Long Account Name'}]:
+        for profile, expected in [({}, 'Your account'), ({'full_name': '  ', 'name': 'Provider Name'}, 'Provider Name'), ({'full_name': 'Alexandra Morgan With A Very Long Account Name'}, 'Alexandra Morgan With A Very Long Account Name')]:
             context, page, state = await fixture(browser, width=320, profile=profile)
-            expected = USER['email']
             await expect(page.locator('.account-name:visible')).to_have_text(expected)
-            await expect(page.get_by_role('button', name=f'Account options for {expected}', exact=True)).to_be_visible()
+            account = page.get_by_role('button', name=f'Account options for {expected}', exact=True)
+            await expect(account).to_have_attribute('title', expected)
+            await expect(page.get_by_text(USER['email'], exact=True)).to_have_count(0)
+            await account.click()
+            await expect(page.get_by_role('menu').get_by_text(USER['email'], exact=True)).to_be_visible()
+            await expect(page.get_by_role('menuitem', name='Sign out')).to_be_visible()
             await no_overflow(page)
             await context.close()
-        print('PASS: account email is shown regardless of profile name', flush=True)
+        print('PASS: account button shows profile name or fallback; email appears only after opening its menu', flush=True)
 
-        for access in ['empty', 'inactive']:
-            context, page, state = await fixture(browser, access=access)
+        for access, width in [('empty', 1440), ('inactive', 390), ('expired', 320)]:
+            context, page, state = await fixture(browser, access=access, width=width)
             await page.get_by_role('searchbox', name='Search apps').fill('WED')
-            await expect(page.get_by_role('link', name='Get Rovty Wed')).to_have_attribute('href', '/billing/wed')
+            card = page.get_by_role('article', name='Rovty Wed')
+            await expect(card.get_by_text('No access', exact=True)).to_be_visible()
+            launch = card.get_by_role('button', name='Open Rovty Wed')
+            await expect(launch).to_be_disabled()
+            await launch.evaluate('button => button.click()')
+            payments = card.get_by_role('link', name='Plan & payments')
+            await expect(payments).to_have_attribute('href', '/billing/wed')
+            await expect(card.locator('a, button:enabled')).to_have_count(1)
             await expect(page.get_by_text('Choose an app to get started.')).to_be_visible()
-            assert not await page.get_by_role('button', name='Open Rovty Wed').count()
             assert not await page.get_by_text('Rovty Assist', exact=True).count()
+            await no_overflow(page)
+            await page.screenshot(path=f'/tmp/rovty-apps-locked-{width}.png', full_page=True)
+            await context.route(f'{BASE}/billing/wed', lambda route: route.fulfill(content_type='text/html', body='<h1>Plan & payments</h1>'))
+            await payments.click()
+            await expect(page).to_have_url(f'{BASE}/billing/wed')
+            await page.goto(f'{BASE}/open/wed')
+            await expect(page.get_by_text('This account doesn’t have access to Rovty Wed yet.')).to_be_visible()
             assert state['mint_calls'] == []
+            assert not state['errors'], state['errors']
             await context.close()
-        print('PASS: empty and inactive accounts show only available apps without launch access', flush=True)
+        print('PASS: missing, inactive, and expired access disable Open; only Plan & payments is clickable; direct app links cannot launch', flush=True)
 
         context, page, state = await fixture(browser, access='error', width=390)
         await expect(page.get_by_role('alert')).to_contain_text('We couldn’t load your apps.', timeout=20000)
-        assert not await page.get_by_role('link', name='Get Rovty Wed').count()
+        assert not await page.get_by_role('link', name='Plan & payments').count()
         await page.screenshot(path='/tmp/rovty-apps-error.png', full_page=True)
         state['access'] = 'active'
         await page.get_by_role('button', name='Try again').click()
@@ -257,7 +275,7 @@ async def run():
             await context.route('https://rovty.com/', lambda route: route.fulfill(content_type='text/html', body='<h1>Rovty home</h1>'))
             visited = []
             page.on('framenavigated', lambda frame: visited.append(frame.url) if frame == page.main_frame else None)
-            await page.get_by_role('button', name=f'Account options for {USER["email"]}', exact=True).click()
+            await page.get_by_role('button', name='Account options for Alex Morgan', exact=True).click()
             await page.get_by_role('menuitem', name='Sign out', exact=True).click()
             # Supabase clears the local session even when server revocation fails.
             await expect(page).to_have_url('https://rovty.com/')
